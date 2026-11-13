@@ -87,6 +87,7 @@ export const reactionGame = defineGame<ReactionPuzzle>({
   durationMs: 20_000,
   better: "lower",
   formatScore: (n) => `${n} ms`,
+  formatMargin: (d) => `${d} ms faster`,
   createPuzzle: createReactionPuzzle,
   Component: Reaction,
 });

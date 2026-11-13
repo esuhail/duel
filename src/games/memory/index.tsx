@@ -77,6 +77,7 @@ export const memoryGame = defineGame<Color[]>({
   durationMs: 60_000,
   better: "higher",
   formatScore: (n) => `length ${n}`,
+  formatMargin: (d) => `${d} longer`,
   createPuzzle: createMemoryPuzzle,
   Component: MemorySequence,
 });

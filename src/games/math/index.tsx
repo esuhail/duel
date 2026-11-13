@@ -63,6 +63,7 @@ export const quickMathGame = defineGame<MathProblem[]>({
   durationMs: 30_000,
   better: "higher",
   formatScore: (n) => `${n} solved`,
+  formatMargin: (d) => `${d} more solved`,
   createPuzzle: createMathPuzzle,
   Component: QuickMath,
 });

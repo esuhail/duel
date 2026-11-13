@@ -68,6 +68,7 @@ export const unscrambleGame = defineGame<ScrambledWord[]>({
   durationMs: 45_000,
   better: "higher",
   formatScore: (n) => `${n} word${n === 1 ? "" : "s"}`,
+  formatMargin: (d) => `${d} more word${d === 1 ? "" : "s"}`,
   createPuzzle: createUnscramblePuzzle,
   Component: Unscramble,
 });

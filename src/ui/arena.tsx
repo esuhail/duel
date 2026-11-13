@@ -3,6 +3,7 @@
  * P1 = host = lime, P2 = guest = vermilion, everywhere.
  */
 import type { CSSProperties, ReactNode } from "react";
+import type { Progress } from "../games/types";
 import { type MatchState, type PlayerId, type RoundResult, winsNeeded } from "../core/match";
 import { getGame } from "../games/registry";
 
@@ -52,12 +53,22 @@ export function Hud({ state, me }: { state: MatchState; me: PlayerId | null }) {
     <header className="hud" data-testid="scoreboard">
       {side("host")}
       {side("guest")}
+      <div className="hud__meta" data-testid="hud-meta">{hudMeta(state)}</div>
       <div className="tug" aria-hidden="true">
         <div className="tug__p1" style={{ width: `${knot}%` }} />
         <div className="tug__knot" style={{ left: `${knot}%` }} />
       </div>
     </header>
   );
+}
+
+function hudMeta(state: MatchState): string {
+  const need = winsNeeded(state.bestOf);
+  const cur = state.current;
+  if (state.phase === "lobby") return `Best of ${state.bestOf}, first to ${need}`;
+  if (state.phase === "matchOver") return "Match over";
+  const round = state.phase === "roundResult" ? state.history.at(-1)!.round : cur?.round ?? 1;
+  return `Round ${round}, first to ${need}`;
 }
 
 /** Big rotated label slammed across the seam. */
@@ -75,15 +86,18 @@ export function RoundSplit({ state, result, me }: { state: MatchState; result: R
   const w = result.winner;
   // The stamp sits on the seam, pulled inward a bit so it never leaves the screen.
   const seamAt = w === "host" ? 62 : w === "guest" ? 38 : 50;
+  const margin = w ? game.formatMargin(Math.abs(result.scores.host - result.scores.guest)) : "Dead even";
   return (
     <div className="split shake-hard" data-testid="round-result">
       {(["host", "guest"] as const).map((p) => (
         <div key={p} className={`split__half split__half--${slot(p)} ${w === p ? "is-win" : w ? "is-lose" : ""}`}>
           <div className="split__name">{state.players[p]?.name}{me === p && " (you)"}</div>
           <div className="split__score">{game.formatScore(result.scores[p])}</div>
+          {w === p && <div className="split__margin">{margin}</div>}
         </div>
       ))}
       <Stamp at={seamAt}>{w ? "Round over" : "Tie: replay"}</Stamp>
+      <div className="split__game">Round {result.round}, {game.name}</div>
     </div>
   );
 }
@@ -133,6 +147,84 @@ export function CountdownNumber({ msLeft }: { msLeft: number }) {
   return (
     <div className="countdown" data-testid="countdown">
       <div className="countdown__num" key={n}>{n}</div>
+    </div>
+  );
+}
+
+/**
+ * Desktop side rail for one player: live meter, status, and round log.
+ * The meter hugs the edge facing the stage, like a fighting-game super meter.
+ */
+export function Rail({ state, p, me, progress }: { state: MatchState; p: PlayerId; me: PlayerId | null; progress?: Progress }) {
+  const info = state.players[p];
+  const cur = state.current;
+  const finished = cur?.scores[p];
+  const live = state.phase === "countdown" || state.phase === "playing";
+  const game = cur ? getGame(cur.gameId) : null;
+  const fraction = finished !== undefined ? Math.max(progress?.fraction ?? 0, 0.02) : progress?.fraction ?? 0;
+
+  let status: string;
+  if (!info) status = "Open seat";
+  else if (!info.connected) status = "Dropped, holding 30 s";
+  else if (state.phase === "lobby") status = p === "host" ? "Ready" : "Joined";
+  else if (state.phase === "countdown") status = "Reading the rules";
+  else if (state.phase === "playing") status = finished !== undefined ? "Finished" : "Playing";
+  else if (state.phase === "roundResult") status = state.history.at(-1)?.winner === p ? "Took the round" : state.history.at(-1)?.winner ? "Lost the round" : "Tied";
+  else status = state.winner === p ? "Match winner" : "Out";
+
+  return (
+    <aside className={`rail rail--${slot(p)} ${live ? "is-live" : ""}`} data-testid={`rail-${p}`}>
+      <div className="rail__head">
+        <div className="rail__name">{info?.name ?? "Waiting…"}</div>
+        <div className="rail__tags">
+          <span className="rail__tag">{p === "host" ? "P1, host" : "P2, guest"}</span>
+          {me === p && <span className="rail__tag rail__tag--you">you</span>}
+          <span className={info?.connected === false ? "rail__conn is-down" : "rail__conn"}>{info?.connected === false ? "Offline" : "Online"}</span>
+        </div>
+      </div>
+
+      <div className="rail__live">
+        <div className="rail__status">{status}</div>
+        {live && game && (
+          <>
+            <div className="rail__figure" key={progress?.headline ?? "0"}>
+              {finished !== undefined ? game.formatScore(finished) : progress?.headline ?? "0"}
+            </div>
+            <div className="rail__unit">{finished !== undefined ? "final score" : progress?.unit ?? "waiting for first move"}</div>
+            <div className="rail__detail">{finished === undefined ? progress?.detail ?? "" : ""}</div>
+          </>
+        )}
+      </div>
+
+      <ol className="rail__log" aria-label="Rounds so far">
+        {state.history.map((r, i) => {
+          const g = getGame(r.gameId);
+          return (
+            <li key={i} className={r.winner === p ? "is-win" : r.winner ? "is-loss" : "is-tie"}>
+              <span className="rail__log-round">R{r.round}</span>
+              <span className="rail__log-game">{g.name}</span>
+              <span className="rail__log-score">{g.formatScore(r.scores[p])}</span>
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="meter" aria-hidden="true">
+        <div className="meter__fill" style={{ height: `${fraction * 100}%` }} />
+      </div>
+    </aside>
+  );
+}
+
+/** Mobile: one slim line showing what the opponent is doing right now. */
+export function OpponentStrip({ name, p, progress, finishedText }: { name: string; p: PlayerId; progress?: Progress; finishedText?: string }) {
+  return (
+    <div className={`strip strip--${slot(p)}`} data-testid="opponent-strip">
+      <span className="strip__name">{name}</span>
+      <span className="strip__value" key={finishedText ?? progress?.headline}>
+        {finishedText ? `Finished, ${finishedText}` : progress ? `${progress.headline} ${progress.unit}` : "Starting…"}
+      </span>
+      <span className="strip__bar"><i style={{ width: `${(finishedText ? 1 : progress?.fraction ?? 0) * 100}%` }} /></span>
     </div>
   );
 }

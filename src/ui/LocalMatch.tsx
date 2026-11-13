@@ -95,6 +95,7 @@ function LocalArena({ p1, p2, bestOf }: { p1: string; p2: string; bestOf: BestOf
   return (
     <div className="arena">
       <Hud state={state} me={null} />
+      <div className="arena__body arena__body--local">
       <main className="stage">
         {state.phase === "countdown" && cur && (
           cur.startAt - t > TIMING.countdownMs
@@ -122,6 +123,7 @@ function LocalArena({ p1, p2, bestOf }: { p1: string; p2: string; bestOf: BestOf
           </div>
         )}
       </main>
+      </div>
     </div>
   );
 }

@@ -41,6 +41,8 @@ export interface MiniGame<P = unknown> {
   durationMs: number;
   better: Better;
   formatScore: (score: number) => string;
+  /** How a winning margin reads, e.g. "87 ms faster" or "3 more solved". */
+  formatMargin: (diff: number) => string;
   createPuzzle: (seed: number) => P;
   Component: ComponentType<GameProps<P>>;
 }

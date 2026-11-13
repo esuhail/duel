@@ -4,7 +4,7 @@ import { now } from "../core/clock";
 import { type MatchState, other } from "../core/match";
 import { getGame } from "../games/registry";
 import { TIMING } from "../host/hostController";
-import { CountdownNumber, Hud, Intro, MatchTable, RoundSplit, Stamp } from "./arena";
+import { CountdownNumber, Hud, Intro, MatchTable, OpponentStrip, Rail, RoundSplit, Stamp } from "./arena";
 import { GamePlayer } from "./GamePlayer";
 import { useNow } from "./hooks";
 import { useSetSeam } from "./seam";
@@ -34,12 +34,24 @@ export function MatchView({ s }: { s: SessionView }) {
         <div className="alert" data-testid="disconnected">{opp.name} dropped. Holding the match for 30 s.</div>
       )}
       {s.status === "reconnecting" && <div className="alert">Connection lost. Reconnecting…</div>}
-      <main className="stage">
-        {state.phase === "lobby" && <Lobby s={s} state={state} />}
-        {(state.phase === "countdown" || state.phase === "playing") && <RoundView s={s} state={state} />}
-        {state.phase === "roundResult" && last && <RoundSplit state={state} result={last} me={me} />}
-        {state.phase === "matchOver" && <MatchOver state={state} me={me} />}
-      </main>
+      {(state.phase === "countdown" || state.phase === "playing") && opp && (
+        <OpponentStrip
+          name={opp.name}
+          p={other(me)}
+          progress={s.progress[other(me)]}
+          finishedText={state.current?.scores[other(me)] !== undefined ? getGame(state.current.gameId).formatScore(state.current.scores[other(me)]!) : undefined}
+        />
+      )}
+      <div className="arena__body">
+        <Rail state={state} p="host" me={me} progress={s.progress.host} />
+        <main className="stage">
+          {state.phase === "lobby" && <Lobby s={s} state={state} />}
+          {(state.phase === "countdown" || state.phase === "playing") && <RoundView s={s} state={state} />}
+          {state.phase === "roundResult" && last && <RoundSplit state={state} result={last} me={me} />}
+          {state.phase === "matchOver" && <MatchOver state={state} me={me} />}
+        </main>
+        <Rail state={state} p="guest" me={me} progress={s.progress.guest} />
+      </div>
     </div>
   );
 }
@@ -70,13 +82,18 @@ function Lobby({ s, state }: { s: SessionView; state: MatchState }) {
   };
   return (
     <div className="panel lobby">
-      <p className="lead">Room code</p>
+      <div className="lobby__share">
+      <p className="lead">Room code, share it with one friend</p>
       <div className="code" data-testid="room-code">
         {s.roomId.split("").map((c, i) => <span key={i} className="code__cell">{c}</span>)}
       </div>
       {qr && <img className="qr" src={qr} alt="QR code that opens this room" />}
       <input className="sr-only" readOnly value={link} data-testid="invite-link" aria-label="Invite link" />
       <button className="key key--wide" onClick={share}>{copied ? "Link copied" : "Share link"}</button>
+      <p className="muted">They can scan the code, open the link, or type the 4 letters on the home screen.</p>
+      </div>
+      <div className="lobby__setup">
+      <p className="lead">Match length</p>
       <div className="seg" role="group" aria-label="Match length">
         {([3, 5] as const).map((n) => (
           <button key={n} className={state.bestOf === n ? "seg__opt is-on" : "seg__opt"} aria-pressed={state.bestOf === n} onClick={() => hostCtl()?.setBestOf(n)}>
@@ -88,6 +105,8 @@ function Lobby({ s, state }: { s: SessionView; state: MatchState }) {
       <button className="trigger" disabled={!guest?.connected} onClick={() => hostCtl()?.start()} data-testid="start-match">
         Fight
       </button>
+      <p className="muted">{guest?.connected ? "Rounds are picked at random, no repeats until every game is played." : "Fight unlocks when player 2 joins."}</p>
+      </div>
     </div>
   );
 }
@@ -116,6 +135,9 @@ function RoundView({ s, state }: { s: SessionView; state: MatchState }) {
       <div className="panel">
         <p className="lead">You: <span className="mono">{game.formatScore(myScore.value)}</span></p>
         <p className="waiting">Waiting for {state.players[other(s.role)]?.name}</p>
+        {s.progress[other(s.role)] && (
+          <p className="muted">They're on {s.progress[other(s.role)]!.headline} {s.progress[other(s.role)]!.unit}</p>
+        )}
       </div>
     );
   }
@@ -128,6 +150,7 @@ function RoundView({ s, state }: { s: SessionView; state: MatchState }) {
         setMyScore({ key, value });
         s.submitScore(cur.round, cur.attempt, value);
       }}
+      onProgress={(p) => s.reportProgress(cur.round, cur.attempt, p)}
     />
   );
 }

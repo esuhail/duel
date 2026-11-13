@@ -49,6 +49,7 @@ export const targetTapGame = defineGame<Point[]>({
   durationMs: TARGET_TIME_LIMIT,
   better: "lower",
   formatScore: (n) => `${(n / 1000).toFixed(2)} s`,
+  formatMargin: (d) => `${(d / 1000).toFixed(2)} s faster`,
   createPuzzle: createTargetsPuzzle,
   Component: TargetTap,
 });
