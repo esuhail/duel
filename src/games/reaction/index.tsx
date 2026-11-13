@@ -41,7 +41,7 @@ function Reaction({ puzzle, onFinish, onProgress }: GameProps<ReactionPuzzle>) {
       // the closest JS gets to "the moment the player could see it".
       greenAt.current = performance.now(); // fallback if a tap beats the first frame
       const raf = requestAnimationFrame((t) => (greenAt.current = t));
-      const miss = setTimeout(() => record(PENALTY_MS, "Too slow! +1000 ms"), MISS_AFTER_MS);
+      const miss = setTimeout(() => record(PENALTY_MS, "Too slow +1s"), MISS_AFTER_MS);
       return () => { cancelAnimationFrame(raf); clearTimeout(miss); };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -62,7 +62,7 @@ function Reaction({ puzzle, onFinish, onProgress }: GameProps<ReactionPuzzle>) {
   });
 
   const onTap = (e: { timeStamp: number }) => {
-    if (stage === "wait") record(PENALTY_MS, "Too early! +1000 ms");
+    if (stage === "wait") record(PENALTY_MS, "Too early +1s");
     // pointerdown + event.timeStamp (same clock as rAF) avoids click's delay.
     else if (stage === "go") {
       const ms = Math.max(0, Math.round(e.timeStamp - greenAt.current));
@@ -72,8 +72,9 @@ function Reaction({ puzzle, onFinish, onProgress }: GameProps<ReactionPuzzle>) {
 
   return (
     <div className={`reaction reaction--${stage}`} onPointerDown={onTap} data-testid="reaction-pad">
+      <div className="reaction__lamp" aria-hidden="true" />
       <div className="reaction__label">
-        {stage === "wait" && "Wait for green…"}
+        {stage === "wait" && "Hold…"}
         {stage === "go" && "Hit!"}
         {stage === "feedback" && message}
       </div>

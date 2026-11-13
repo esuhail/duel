@@ -27,6 +27,9 @@ function TargetTap({ puzzle, onFinish, onProgress }: GameProps<Point[]>) {
   return (
     <div className="targets" data-testid="targets-arena">
       <div className="targets__count">{hit} / {TARGET_COUNT}</div>
+      {hit > 0 && (
+        <span key={`b${hit}`} className="burst" style={{ left: `${puzzle[hit - 1]!.x}%`, top: `${puzzle[hit - 1]!.y}%` }} aria-hidden="true" />
+      )}
       {p && (
         <button
           key={hit}

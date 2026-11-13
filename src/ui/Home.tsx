@@ -56,6 +56,10 @@ export function Home() {
       <div className="home__play">
 
       <section className="join" aria-label="Join a room">
+        <label className="player-name">
+          <span className="lead">Player name</span>
+          <input value={name} maxLength={12} onChange={(e) => setName(e.target.value)} placeholder="P1" data-testid="name-input" autoComplete="nickname" spellCheck={false} />
+        </label>
         <p className="lead">Got a code? Punch it in.</p>
         <div className="code code--input" data-testid="code-input">
           {Array.from({ length: CODE_LENGTH }, (_, i) => (
@@ -75,10 +79,6 @@ export function Home() {
 
       </div>
       <footer className="home__more">
-        <label className="name-field">
-          Name
-          <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="P1" data-testid="name-input" />
-        </label>
         <a href="#/local" className="textlink">Same keyboard</a>
         <span className="home__practice">
           Practice:{" "}
