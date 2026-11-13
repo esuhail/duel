@@ -22,7 +22,13 @@
   "homepage": "https://github.com/esuhail/duel#readme",
   "dependencies": {
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource/anton": "^5.3.0",
     "@fontsource/archivo-black": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/press-start-2p": "^5.3.0",
+    "@fontsource/rubik-mono-one": "^5.3.0",
+    "@fontsource/space-mono": "^5.3.0",
+    "@fontsource/vt323": "^5.3.0",
     "peerjs": "^1.5.5",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",

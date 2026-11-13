@@ -1,0 +1,81 @@
+/*
+ * Swiss Sports: an Olympic results board. White canvas on a strict grid,
+ * flat colour, no shadows, no rotation. Giant condensed numerals carry all
+ * the drama. P1 blue, P2 red; text on colour is white.
+ */
+@import "@fontsource/anton";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+
+:root[data-theme="swiss"] {
+  --bg: #fafafa;
+  --fg: #0a0a0a;
+  --on: #ffffff;
+  --p1: #0038ff;
+  --p2: #ff2d1a;
+  --key: #ffffff;
+  --key-fg: #0a0a0a;
+  --key-edge: #0a0a0a;
+  --key-depth: transparent;
+  --key-hover: #0a0a0a;
+  --steel: #d9d9d9;
+  --display: "Anton", "Arial Narrow", sans-serif;
+  --mono: "IBM Plex Mono", monospace;
+  --edge: 2px solid var(--fg);
+  --edge-dark: 2px solid var(--fg);
+}
+
+/* Grid paper instead of stripes; the seam is a plain rule. */
+[data-theme="swiss"] .field__side--p1, [data-theme="swiss"] .field__side--p2 {
+  background:
+    linear-gradient(color-mix(in srgb, var(--fg) 6%, transparent) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(90deg, color-mix(in srgb, var(--fg) 6%, transparent) 1px, transparent 1px) 0 0 / 48px 48px;
+}
+[data-theme="swiss"] .field__side--p1 { background-color: color-mix(in srgb, var(--p1) 4%, transparent); }
+[data-theme="swiss"] .field__side--p2 { background-color: color-mix(in srgb, var(--p2) 4%, transparent); }
+[data-theme="swiss"] .seam--p1, [data-theme="swiss"] .seam--p2, [data-theme="swiss"] .field__scan { display: none; }
+[data-theme="swiss"] .seam--core { stroke-width: 2px; }
+[data-theme="swiss"] .field__vs { -webkit-text-stroke: 0; color: color-mix(in srgb, var(--fg) 4%, transparent); transform: translate(-50%, -50%); font-size: min(60vw, 80vh); }
+
+/* Nothing floats: kill every hard shadow and tilt. */
+[data-theme="swiss"] *, [data-theme="swiss"] *::before { box-shadow: none !important; }
+[data-theme="swiss"] .title-stamp { transform: none; background: none; color: var(--fg); border: 0; padding: 0; font-size: clamp(110px, 38vw, 260px); line-height: 0.82; letter-spacing: -0.01em; text-transform: uppercase; }
+[data-theme="swiss"] .title-stamp--small { font-size: clamp(56px, 16vw, 96px); }
+[data-theme="swiss"] .stamp { transform: translate(-50%, -50%); background: var(--fg); color: var(--on); border: 0; font-size: clamp(40px, 12vw, 96px); padding: 6px 20px; text-transform: uppercase; animation: swiss-drop 0.35s cubic-bezier(0.2, 0.9, 0.2, 1) both; }
+[data-theme="swiss"] .trigger--huge, [data-theme="swiss"] .intro__name, [data-theme="swiss"] .over__title { transform: none; }
+[data-theme="swiss"] .intro__name, [data-theme="swiss"] .over__title { font-size: clamp(56px, 16vw, 110px); line-height: 0.9; text-transform: uppercase; }
+[data-theme="swiss"] .hud__name, [data-theme="swiss"] .rail__name { text-transform: uppercase; }
+[data-theme="swiss"] .countdown__num { color: var(--fg); text-shadow: none; font-size: min(80vw, 520px); line-height: 0.85; }
+[data-theme="swiss"] .rail__figure { font-size: clamp(80px, 9vw, 160px); line-height: 0.9; }
+[data-theme="swiss"] .split__score { font-family: var(--display); font-size: clamp(48px, 12vw, 120px); line-height: 0.9; }
+
+[data-theme="swiss"] .trigger { color: var(--on); background: var(--p1); border: 0; font-size: 34px; text-transform: uppercase; letter-spacing: 0.02em; }
+[data-theme="swiss"] .trigger:disabled { background: var(--steel); color: #888; }
+[data-theme="swiss"] .keycap, [data-theme="swiss"] .numpad__key, [data-theme="swiss"] .tile { border-width: 2px; }
+[data-theme="swiss"] .keycap:active, [data-theme="swiss"] .numpad__key:active, [data-theme="swiss"] .tile:active { color: var(--on); transform: none; }
+[data-theme="swiss"] .code__cell { background: var(--bg); color: var(--fg); border-width: 2px; }
+[data-theme="swiss"] .math__problem, [data-theme="swiss"] .code__cell { font-family: var(--display); font-weight: 400; }
+[data-theme="swiss"] .math__problem { font-size: clamp(64px, 16vw, 140px); }
+[data-theme="swiss"] .reaction__label, [data-theme="swiss"] .duel__light { text-transform: uppercase; }
+[data-theme="swiss"] .reaction--go .reaction__label { font-size: clamp(110px, 30vw, 300px); }
+[data-theme="swiss"] .reaction, [data-theme="swiss"] .duel__pad--p1.is-hit, [data-theme="swiss"] .duel__pad--p2.is-hit { color: var(--on); }
+[data-theme="swiss"] .reaction--feedback { color: var(--on); background: var(--fg); }
+[data-theme="swiss"] .reaction--feedback .dot--done { background: var(--on); }
+[data-theme="swiss"] .split__half.is-win, [data-theme="swiss"] .history .win-p1, [data-theme="swiss"] .history .win-p2 { color: var(--on); }
+[data-theme="swiss"] .split__margin { background: var(--on); color: var(--fg); }
+[data-theme="swiss"] .tug { height: 10px; border-width: 0; }
+[data-theme="swiss"] .tug__knot { background: var(--fg); border: 0; width: 4px; height: 26px; top: -8px; }
+[data-theme="swiss"] .math__solved { color: var(--on); background: var(--p1); }
+[data-theme="swiss"] .pad { filter: none; opacity: 0.25; }
+[data-theme="swiss"] .memory__pads[data-stage="input"] .pad { filter: none; opacity: 0.55; }
+[data-theme="swiss"] .memory__pads .pad--lit { opacity: 1; }
+[data-theme="swiss"] .target { background: radial-gradient(circle, var(--on) 0 16%, var(--p2) 17% 40%, var(--on) 41% 56%, var(--p2) 57%); border-color: var(--fg); }
+
+@media (hover: hover) and (pointer: fine) {
+  /* Hover: flat inversion, nothing moves. */
+  [data-theme="swiss"] .trigger:hover:not(:disabled) { transform: none; background: var(--fg); background-image: none; animation: none; }
+  [data-theme="swiss"] .trigger--huge:hover:not(:disabled) { transform: none; }
+  [data-theme="swiss"] .key:hover { background: var(--fg); color: var(--on); }
+  [data-theme="swiss"] .keycap:hover, [data-theme="swiss"] .numpad__key:hover, [data-theme="swiss"] .tile:hover { transform: none; color: var(--on); }
+}
+@keyframes swiss-drop { from { transform: translate(-50%, -150%); } }

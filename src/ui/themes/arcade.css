@@ -1,0 +1,91 @@
+/*
+ * Arcade CRT: a cabinet screen at 2am. Pixel type, phosphor glow, a
+ * synthwave floor grid per player, notched "pixel corner" buttons with
+ * bevels like real arcade buttons. P1 cyan, P2 hot pink, coin-yellow
+ * for anything you can press.
+ */
+@import "@fontsource/press-start-2p";
+@import "@fontsource/vt323";
+
+:root[data-theme="arcade"] {
+  --bg: #0b0420;
+  --fg: #e8e6ff;
+  --on: #0b0420;
+  --p1: #2de2e6;
+  --p2: #ff3864;
+  --coin: #f9c80e;
+  --key: #241b4d;
+  --key-fg: #e8e6ff;
+  --key-edge: #4a3c8c;
+  --key-depth: #120a2e;
+  --key-hover: #33276b;
+  --steel: #2a2150;
+  --display: "Press Start 2P", monospace;
+  --mono: "VT323", monospace;
+  --notch: polygon(0 6px, 6px 6px, 6px 0, calc(100% - 6px) 0, calc(100% - 6px) 6px, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 6px calc(100% - 6px), 0 calc(100% - 6px));
+}
+:root[data-theme="arcade"] body { font-size: 21px; line-height: 1.2; }
+
+/* Floor grid: each player's half is a glowing perspective plane. */
+[data-theme="arcade"] .field__side--p1,
+[data-theme="arcade"] .field__side--p2 {
+  background:
+    linear-gradient(to bottom, var(--bg) 0 45%, transparent 75%),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--side) 30%, transparent) 0 2px, transparent 2px 64px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--side) 30%, transparent) 0 2px, transparent 2px 40px),
+    radial-gradient(ellipse at 50% 110%, color-mix(in srgb, var(--side) 35%, transparent), transparent 60%);
+}
+[data-theme="arcade"] .field__side--p1 { --side: var(--p1); }
+[data-theme="arcade"] .field__side--p2 { --side: var(--p2); }
+[data-theme="arcade"] .field__vs { font-size: min(22vw, 30vh); -webkit-text-stroke: 2px color-mix(in srgb, var(--coin) 20%, transparent); transform: translate(-50%, -50%); }
+[data-theme="arcade"] .seam--core { stroke: var(--coin); filter: drop-shadow(0 0 6px var(--coin)); }
+[data-theme="arcade"] .field__scan { background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.35) 0 2px, transparent 2px 4px), radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.6)); }
+
+/* Phosphor glow on anything that is a "light". */
+[data-theme="arcade"] .hud__name, [data-theme="arcade"] .rail__name, [data-theme="arcade"] .over__title,
+[data-theme="arcade"] .countdown__num, [data-theme="arcade"] .intro__round, [data-theme="arcade"] .rail__figure { text-shadow: 0 0 10px currentColor; }
+[data-theme="arcade"] .hud__name { font-size: 15px; }
+[data-theme="arcade"] .countdown__num { font-size: min(40vw, 220px); color: var(--coin); text-shadow: 0 0 24px var(--coin), 8px 8px 0 var(--p2), -8px -8px 0 var(--p1); }
+
+/* Title: a marquee sign, not a sticker. */
+[data-theme="arcade"] .title-stamp {
+  font-size: clamp(44px, 14vw, 104px);
+  color: var(--coin);
+  background: none;
+  border: 0;
+  padding: 0;
+  transform: none;
+  box-shadow: none;
+  letter-spacing: 0;
+  text-shadow: 0 0 18px var(--coin), 6px 6px 0 var(--p2), -6px -6px 0 var(--p1);
+}
+[data-theme="arcade"] .title-stamp--small { font-size: clamp(22px, 6vw, 36px); }
+[data-theme="arcade"] .intro__name, [data-theme="arcade"] .over__title { font-size: clamp(22px, 6vw, 44px); line-height: 1.25; transform: none; }
+[data-theme="arcade"] .stamp { font-size: clamp(18px, 5vw, 40px); background: var(--coin); color: var(--on); border-color: var(--on); clip-path: var(--notch); box-shadow: none; padding: 16px 22px; }
+
+/* Buttons: notched pixel corners + bevel, coin-yellow when pressable. */
+[data-theme="arcade"] .trigger, [data-theme="arcade"] .key, [data-theme="arcade"] .keycap, [data-theme="arcade"] .numpad__key,
+[data-theme="arcade"] .tile, [data-theme="arcade"] .code__cell, [data-theme="arcade"] .panel, [data-theme="arcade"] .seg { clip-path: var(--notch); }
+[data-theme="arcade"] .trigger { font-size: 20px; background: var(--coin); color: var(--on); border: 0; box-shadow: inset -6px -6px 0 rgba(0, 0, 0, 0.3), inset 6px 6px 0 rgba(255, 255, 255, 0.45); }
+[data-theme="arcade"] .trigger--huge { font-size: clamp(20px, 6vw, 30px); transform: none; }
+[data-theme="arcade"] .trigger:active:not(:disabled) { transform: translateY(3px); box-shadow: inset 6px 6px 0 rgba(0, 0, 0, 0.3); }
+[data-theme="arcade"] .trigger:disabled { background: var(--steel); box-shadow: none; }
+[data-theme="arcade"] .key { font-size: 20px; border-color: var(--p1); color: var(--p1); box-shadow: none; }
+[data-theme="arcade"] .keycap, [data-theme="arcade"] .numpad__key, [data-theme="arcade"] .tile { font-family: var(--display); font-size: 14px; }
+[data-theme="arcade"] .numpad__key, [data-theme="arcade"] .tile { font-size: 22px; }
+[data-theme="arcade"] .code__cell { font-family: var(--display); font-size: 26px; color: var(--coin); box-shadow: none; border-color: var(--key-edge); }
+[data-theme="arcade"] .pip { border-width: 4px; }
+[data-theme="arcade"] .hud__side--p1 .pip--on, [data-theme="arcade"] .hud__side--p2 .pip--on { box-shadow: 0 0 12px currentColor; }
+[data-theme="arcade"] .reaction__label, [data-theme="arcade"] .duel__light { font-size: clamp(20px, 6vw, 40px); }
+[data-theme="arcade"] .reaction--go .reaction__label { font-size: clamp(40px, 12vw, 96px); }
+[data-theme="arcade"] .math__problem { font-family: var(--display); font-size: clamp(22px, 7vw, 54px); }
+[data-theme="arcade"] .rail__figure { font-size: clamp(36px, 4vw, 64px); }
+[data-theme="arcade"] .split__name { font-size: 16px; }
+
+@media (hover: hover) and (pointer: fine) {
+  /* Hover: the "insert coin" blink. */
+  [data-theme="arcade"] .trigger:hover:not(:disabled) { transform: none; background-image: none; animation: arcade-blink 0.5s steps(1) infinite; box-shadow: inset -6px -6px 0 rgba(0, 0, 0, 0.3), inset 6px 6px 0 rgba(255, 255, 255, 0.45), 0 0 24px var(--coin); }
+  [data-theme="arcade"] .key:hover { background: var(--p1); color: var(--on); box-shadow: 0 0 18px var(--p1); }
+  [data-theme="arcade"] .keycap:hover, [data-theme="arcade"] .numpad__key:hover, [data-theme="arcade"] .tile:hover { color: var(--coin); }
+}
+@keyframes arcade-blink { 50% { background-color: #fff27a; } }
