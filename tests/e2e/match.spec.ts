@@ -1,5 +1,5 @@
 import { type Page, expect, test } from "@playwright/test";
-import { playGame } from "./players";
+import { memoryRecorder, playGame } from "./players";
 
 /**
  * Two browser windows play a whole match against each other.
@@ -7,10 +7,13 @@ import { playGame } from "./players";
  * doesn't depend on the public PeerJS server, while still running the real
  * UI, host controller, guest client and protocol end to end.
  */
+test.setTimeout(480_000);
+
 test("two players create, join and finish a match, then rematch", async ({ browser }) => {
   const ctx = await browser.newContext(); // both pages share BroadcastChannel
   const host = await ctx.newPage();
   const guest = await ctx.newPage();
+  await ctx.addInitScript(memoryRecorder);
 
   await host.goto("/?net=local#/");
   await host.getByTestId("name-input").fill("Alice");
@@ -37,11 +40,19 @@ test("two players create, join and finish a match, then rematch", async ({ brows
 });
 
 async function playUntilOver(pages: Page[]) {
-  const deadline = Date.now() + 100_000;
-  while (Date.now() < deadline) {
-    if (await pages[0]!.getByTestId("match-over").isVisible()) return;
-    // Each page plays independently, in parallel, like two real people.
-    await Promise.all(pages.map((p) => playGame(p)));
-  }
-  throw new Error("match did not finish");
+  const deadline = Date.now() + 400_000;
+  // Each page runs its own loop, like two people playing independently.
+  // (A shared loop would make both bots exactly as fast as the slower one,
+  // and every round would tie.)
+  await Promise.all(
+    pages.map(async (page, i) => {
+      while (!(await page.getByTestId("match-over").isVisible())) {
+        if (Date.now() > deadline) {
+          const st = await page.evaluate(() => (window as unknown as { __duel: () => unknown }).__duel());
+          throw new Error("match did not finish: " + JSON.stringify(st));
+        }
+        await playGame(page, i === 1);
+      }
+    }),
+  );
 }

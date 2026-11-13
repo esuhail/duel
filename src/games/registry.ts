@@ -2,10 +2,12 @@ import type { GameRule } from "../core/match";
 import type { MiniGame } from "./types";
 import { quickMathGame } from "./math";
 import { reactionGame } from "./reaction";
+import { memoryGame } from "./memory";
 import { targetTapGame } from "./targets";
+import { unscrambleGame } from "./unscramble";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const GAMES: MiniGame<any>[] = [reactionGame, quickMathGame, targetTapGame];
+export const GAMES: MiniGame<any>[] = [reactionGame, quickMathGame, targetTapGame, unscrambleGame, memoryGame];
 
 export const getGame = (id: string) => {
   const g = GAMES.find((x) => x.id === id);

@@ -123,3 +123,6 @@ export function useSession(): SessionView | null {
 }
 
 export const getSession = () => current;
+
+// Debug hook (also used by the e2e test to explain failures): window.__duel()
+(window as unknown as { __duel: () => unknown }).__duel = () => current && view(current).state;
