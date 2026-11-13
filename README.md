@@ -1,6 +1,10 @@
 # Duel!
 
-A 1v1 minigame showdown in the browser. One player creates a match and sends a link (or QR code), a friend opens it, and they play a best-of-3 or best-of-5 of quick games. No accounts, no install, no game server: the two browsers talk directly over WebRTC.
+A 1v1 minigame showdown in the browser. One player hits **Quick duel** and shares a 4-letter room code (or link / QR code), a friend punches it in, and they play a best-of-3 or best-of-5 of quick games. No accounts, no install, no game server: the two browsers talk directly over WebRTC.
+
+**Play:** https://esuhail.github.io/duel/
+
+**Same keyboard mode:** two players on one device. A Reaction duel where both watch the same light; P1 hits `A`, P2 hits `L` (or each taps their half of a phone screen). It runs the same match reducer with no networking at all.
 
 **Games:** ⚡ Reaction · 🧮 Quick Math · 🎯 Target Tap · 🔤 Unscramble · 🧠 Memory Sequence
 
@@ -65,6 +69,8 @@ flowchart LR
 - **Some networks block peer-to-peer.** Strict school/corporate Wi-Fi and some carrier NATs can't connect directly. PeerJS's defaults include a public TURN relay as fallback; for reliability, set your own TURN server via `VITE_TURN_URL`, `VITE_TURN_USER`, `VITE_TURN_PASS`.
 - **Depends on the free PeerJS signaling server** for the initial handshake. If it's down, nobody can create or join matches (games in progress continue).
 - **If the host refreshes, the match is lost.** Host state lives only in memory.
+- **4-letter room codes are guessable.** 24⁴ ≈ 330k codes keeps clashes rare (a clash just picks another code), but a stranger could land in an open lobby. A longer code or a join confirmation would fix it.
+- **Same-keyboard mode only has Reaction.** It's the only game two people can share one keyboard or screen for fairly; the others need a full keypad or screen each.
 - **Seeded puzzles are predictable** to anyone who reads the seed off the wire. Again: between friends, fine.
 - **Memory Sequence ties are common** (both reach length 7). Ties replay with a new seed, which works but can drag.
 

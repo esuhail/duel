@@ -47,7 +47,7 @@ function Unscramble({ puzzle, onFinish }: { puzzle: ScrambledWord[]; onFinish: (
           </button>
         ))}
       </div>
-      <button className="btn btn--ghost btn--small" onPointerDown={next} data-testid="skip">Skip</button>
+      <button className="key btn--small" onPointerDown={next} data-testid="skip">Skip</button>
     </div>
   );
 }

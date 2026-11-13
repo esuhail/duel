@@ -1,46 +1,82 @@
-import { useState } from "react";
-import type { BestOf } from "../core/match";
+import { useEffect, useState } from "react";
 import { GAMES } from "../games/registry";
-import { newRoomId } from "../net/transport";
+import { CODE_ALPHABET, CODE_LENGTH, newRoomId, normalizeCode } from "../net/transport";
 import { loadName, saveName } from "./hooks";
 import { navigate } from "./router";
 
+/**
+ * The lobby: a title, a 4-letter code you can punch in, and one button.
+ * Typing on a physical keyboard works too; the on-screen keys are for phones
+ * (and avoid the phone keyboard covering half the screen).
+ */
 export function Home() {
   const [name, setName] = useState(loadName);
-  const [bestOf, setBestOf] = useState<BestOf>(3);
+  const [code, setCode] = useState("");
 
-  const create = () => {
-    saveName(name || "Player 1");
-    sessionStorage.setItem("duel:bestOf", String(bestOf));
+  const press = (k: string) => {
+    if (k === "⌫") return setCode((c) => c.slice(0, -1));
+    setCode((c) => normalizeCode(c + k));
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey) return;
+      if (e.key === "Backspace") press("⌫");
+      else if (e.key.length === 1 && CODE_ALPHABET.includes(e.key.toUpperCase())) press(e.key.toUpperCase());
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // A full code joins immediately: no extra button to find.
+  useEffect(() => {
+    if (code.length === CODE_LENGTH) {
+      saveName(name || "P2");
+      navigate(`/join/${code}`);
+    }
+  }, [code, name]);
+
+  const quickDuel = () => {
+    saveName(name || "P1");
+    sessionStorage.setItem("duel:bestOf", "3");
     navigate(`/host/${newRoomId()}`);
   };
 
   return (
-    <div className="screen">
-      <h1 className="logo">Duel!</h1>
-      <p className="tagline">Quick minigames against one friend. Send a link, no sign-up.</p>
-      <div className="panel">
-        <label>
-          Your name
-          <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="Player 1" data-testid="name-input" />
-        </label>
-        <div className="row">
-          {([3, 5] as const).map((n) => (
-            <button key={n} className={bestOf === n ? "btn btn--on" : "btn btn--ghost"} onClick={() => setBestOf(n)} aria-pressed={bestOf === n}>
-              Best of {n}
+    <div className="home">
+      <h1 className="title-stamp" aria-label="Duel">DUEL</h1>
+
+      <section className="join" aria-label="Join a room">
+        <p className="lead">Got a code? Punch it in.</p>
+        <div className="code code--input" data-testid="code-input">
+          {Array.from({ length: CODE_LENGTH }, (_, i) => (
+            <span key={i} className={i === code.length ? "code__cell is-next" : "code__cell"}>{code[i] ?? ""}</span>
+          ))}
+        </div>
+        <div className="keypad">
+          {[...CODE_ALPHABET, "⌫"].map((k) => (
+            <button key={k} className="keycap" onPointerDown={(e) => { e.preventDefault(); press(k); }} aria-label={k === "⌫" ? "Delete" : k}>
+              {k}
             </button>
           ))}
         </div>
-        <button className="btn" onClick={create} data-testid="create-match">Create match</button>
-      </div>
-      <h3>Warm up solo</h3>
-      <div className="game-strip">
-        {GAMES.map((g) => (
-          <button key={g.id} className="sticker" onClick={() => navigate(`/practice/${g.id}`)}>
-            {g.emoji} {g.name}
-          </button>
-        ))}
-      </div>
+      </section>
+
+      <button className="trigger trigger--huge" onClick={quickDuel} data-testid="create-match">Quick duel</button>
+
+      <footer className="home__more">
+        <label className="name-field">
+          Name
+          <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="P1" data-testid="name-input" />
+        </label>
+        <a href="#/local" className="textlink">Same keyboard</a>
+        <span className="home__practice">
+          Practice:{" "}
+          {GAMES.map((g) => (
+            <a key={g.id} href={`#/practice/${g.id}`} className="textlink">{g.name}</a>
+          ))}
+        </span>
+      </footer>
     </div>
   );
 }

@@ -13,7 +13,7 @@ export function HostPage({ roomId }: { roomId: string }) {
   }, [roomId]);
   const err = pendingError();
   if (err) return <ErrorScreen message={err} />;
-  if (!session || session.roomId !== roomId) return <div className="screen"><p>Opening room…</p></div>;
+  if (!session || session.roomId !== roomId) return <div className="home"><p className="waiting">Opening room {roomId}</p></div>;
   return <MatchView s={session} />;
 }
 
@@ -24,15 +24,16 @@ export function JoinPage({ roomId }: { roomId: string }) {
 
   if (!joined || !session || session.roomId !== roomId) {
     return (
-      <div className="screen">
-        <h1>Duel</h1>
-        <p>You've been challenged!</p>
-        <label>
+      <div className="home">
+        <h1 className="title-stamp">DUEL</h1>
+        <p className="lead">You've been challenged. Room</p>
+        <div className="code">{roomId.split("").map((c, i) => <span key={i} className="code__cell">{c}</span>)}</div>
+        <label className="name-field name-field--big">
           Your name
           <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="Player 2" data-testid="name-input" autoFocus />
         </label>
         <button
-          className="btn"
+          className="trigger"
           data-testid="join-match"
           onClick={() => {
             saveName(name || "Player 2");
@@ -40,22 +41,23 @@ export function JoinPage({ roomId }: { roomId: string }) {
             void joinRoom(roomId, name.trim() || "Player 2");
           }}
         >
-          Join match
+          Join room
         </button>
+        <a className="textlink" href="#/">Back</a>
       </div>
     );
   }
   if (session.status === "rejected" || session.status === "lost") return <ErrorScreen message={session.error} />;
-  if (!session.state) return <div className="screen"><p>Connecting to host…</p></div>;
+  if (!session.state) return <div className="home"><p className="waiting">Connecting to room {roomId}</p></div>;
   return <MatchView s={session} />;
 }
 
 function ErrorScreen({ message }: { message: string }) {
   return (
-    <div className="screen">
-      <h2>Couldn't connect</h2>
-      <p data-testid="error">{message}</p>
-      <button className="btn" onClick={() => { leave(); navigate("/"); }}>Home</button>
+    <div className="home">
+      <h2 className="title-stamp title-stamp--small">No signal</h2>
+      <p className="lead" data-testid="error">{message}</p>
+      <button className="trigger" onClick={() => { leave(); navigate("/"); }}>Home</button>
     </div>
   );
 }

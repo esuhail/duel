@@ -34,7 +34,7 @@ test("two players create, join and finish a match, then rematch", async ({ brows
   expect(await host.locator(".history").innerText()).toBe(await guest.locator(".history").innerText());
 
   await guest.getByTestId("rematch").click();
-  await expect(host.getByTestId("rematch")).toContainText("they want one");
+  await expect(host.getByTestId("rematch")).toContainText("they're in");
   await host.getByTestId("rematch").click();
   await expect(guest.getByTestId("intro")).toBeVisible();
 });

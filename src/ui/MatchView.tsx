@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { now } from "../core/clock";
-import { type MatchState, type PlayerId, other, winsNeeded } from "../core/match";
+import { type MatchState, other } from "../core/match";
 import { getGame } from "../games/registry";
 import { TIMING } from "../host/hostController";
+import { CountdownNumber, Hud, Intro, MatchTable, RoundSplit, Stamp } from "./arena";
 import { GamePlayer } from "./GamePlayer";
 import { useNow } from "./hooks";
+import { useSetSeam } from "./seam";
 import { navigate } from "./router";
 import { type SessionView, getSession, leave } from "./session";
 
@@ -22,44 +24,22 @@ export function MatchView({ s }: { s: SessionView }) {
   const state = s.state!;
   const me = s.role;
   const opp = state.players[other(me)];
+  const last = state.history.at(-1);
+  const shift = state.phase === "roundResult" && last?.winner ? (last.winner === "host" ? 25 : -25) : 0;
+  useSetSeam(shift);
   return (
-    <div className="match">
-      <Scoreboard state={state} me={me} />
+    <div className="arena">
+      <Hud state={state} me={me} />
       {opp && !opp.connected && state.phase !== "matchOver" && (
-        <div className="banner banner--warn" data-testid="disconnected">
-          {opp.name} disconnected. Waiting up to 30 s for them to rejoin…
-        </div>
+        <div className="alert" data-testid="disconnected">{opp.name} dropped. Holding the match for 30 s.</div>
       )}
-      {s.status === "reconnecting" && <div className="banner banner--warn">Connection lost. Reconnecting…</div>}
-      {state.phase === "lobby" && <Lobby s={s} state={state} />}
-      {(state.phase === "countdown" || state.phase === "playing") && <RoundView s={s} state={state} />}
-      {state.phase === "roundResult" && <RoundResultView state={state} me={me} />}
-      {state.phase === "matchOver" && <MatchOverView state={state} me={me} />}
-    </div>
-  );
-}
-
-function Scoreboard({ state, me }: { state: MatchState; me: PlayerId }) {
-  const need = winsNeeded(state.bestOf);
-  const side = (p: PlayerId) => {
-    const info = state.players[p];
-    return (
-      <div className={`sb__player sb__player--${p}`}>
-        <div className="sb__name">{info ? info.name : "Waiting…"}</div>
-        {p === me && <div className="sb__you">you</div>}
-        <div className="sb__pips">
-          {Array.from({ length: need }, (_, i) => (
-            <span key={i} className={info && i < info.wins ? "pip pip--won" : "pip"} />
-          ))}
-        </div>
-      </div>
-    );
-  };
-  return (
-    <div className="sb" data-testid="scoreboard">
-      {side("host")}
-      <div className="sb__vs">VS</div>
-      {side("guest")}
+      {s.status === "reconnecting" && <div className="alert">Connection lost. Reconnecting…</div>}
+      <main className="stage">
+        {state.phase === "lobby" && <Lobby s={s} state={state} />}
+        {(state.phase === "countdown" || state.phase === "playing") && <RoundView s={s} state={state} />}
+        {state.phase === "roundResult" && last && <RoundSplit state={state} result={last} me={me} />}
+        {state.phase === "matchOver" && <MatchOver state={state} me={me} />}
+      </main>
     </div>
   );
 }
@@ -69,41 +49,44 @@ function Lobby({ s, state }: { s: SessionView; state: MatchState }) {
   const [qr, setQr] = useState("");
   const [copied, setCopied] = useState(false);
   useEffect(() => {
-    void QRCode.toDataURL(link, { margin: 1, width: 220 }).then(setQr);
+    void QRCode.toDataURL(link, { margin: 1, width: 240, color: { dark: "#000000", light: "#ffffff" } }).then(setQr);
   }, [link]);
   const guest = state.players.guest;
 
   if (s.role === "guest") {
     return (
-      <div className="screen">
-        <h2>You're in!</h2>
-        <p>Best of {state.bestOf}. Waiting for {state.players.host.name} to start…</p>
+      <div className="panel">
+        <p className="lead">You're in. Best of {state.bestOf}.</p>
+        <p className="waiting">Waiting for {state.players.host.name} to start</p>
       </div>
     );
   }
   const share = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title: "Duel me!", url: link }); return; } catch { /* cancelled */ }
+      try { await navigator.share({ title: "Duel me", text: `Room ${s.roomId}`, url: link }); return; } catch { /* cancelled */ }
     }
     await navigator.clipboard?.writeText(link);
     setCopied(true);
   };
   return (
-    <div className="screen">
-      <h2>Invite a friend</h2>
-      {qr && <img className="qr" src={qr} alt="QR code for the match link" />}
-      <input className="link" readOnly value={link} data-testid="invite-link" onFocus={(e) => e.target.select()} />
-      <button className="btn btn--ghost" onClick={share}>{copied ? "Copied!" : "Share link"}</button>
-      <div className="row">
+    <div className="panel lobby">
+      <p className="lead">Room code</p>
+      <div className="code" data-testid="room-code">
+        {s.roomId.split("").map((c, i) => <span key={i} className="code__cell">{c}</span>)}
+      </div>
+      {qr && <img className="qr" src={qr} alt="QR code that opens this room" />}
+      <input className="sr-only" readOnly value={link} data-testid="invite-link" aria-label="Invite link" />
+      <button className="key key--wide" onClick={share}>{copied ? "Link copied" : "Share link"}</button>
+      <div className="seg" role="group" aria-label="Match length">
         {([3, 5] as const).map((n) => (
-          <button key={n} className={state.bestOf === n ? "btn btn--on" : "btn btn--ghost"} onClick={() => hostCtl()?.setBestOf(n)}>
+          <button key={n} className={state.bestOf === n ? "seg__opt is-on" : "seg__opt"} aria-pressed={state.bestOf === n} onClick={() => hostCtl()?.setBestOf(n)}>
             Best of {n}
           </button>
         ))}
       </div>
-      <p data-testid="lobby-status">{guest ? `${guest.name} joined!` : "Waiting for someone to join…"}</p>
-      <button className="btn" disabled={!guest?.connected} onClick={() => hostCtl()?.start()} data-testid="start-match">
-        Start
+      <p className="lobby__status" data-testid="lobby-status">{guest ? `${guest.name} joined!` : "Waiting for player 2…"}</p>
+      <button className="trigger" disabled={!guest?.connected} onClick={() => hostCtl()?.start()} data-testid="start-match">
+        Fight
       </button>
     </div>
   );
@@ -117,7 +100,6 @@ function RoundView({ s, state }: { s: SessionView; state: MatchState }) {
   const [myScore, setMyScore] = useState<{ key: string; value: number } | null>(null);
   const key = `${cur.round}:${cur.attempt}`;
 
-  // Flip to "playing" exactly at startAt on this device's clock.
   useEffect(() => {
     if (state.phase !== "countdown") return;
     const id = setTimeout(() => s.go(), Math.max(0, startAt - now()));
@@ -126,29 +108,14 @@ function RoundView({ s, state }: { s: SessionView; state: MatchState }) {
 
   if (state.phase === "countdown") {
     const left = startAt - t;
-    if (left > TIMING.countdownMs) {
-      return (
-        <div className="screen intro" data-testid="intro">
-          <div className="intro__round">Round {cur.round}{cur.attempt > 0 && " (tie replay)"}</div>
-          <div className="intro__emoji">{game.emoji}</div>
-          <h2>{game.name}</h2>
-          <p>{game.instructions}</p>
-          <span className="rule-chip">{game.better === "lower" ? "Lowest score wins" : "Highest score wins"}</span>
-        </div>
-      );
-    }
-    return (
-      <div className="screen countdown" data-testid="countdown">
-        <div className="countdown__num" key={Math.ceil(left / 1000)}>{Math.max(1, Math.ceil(left / 1000))}</div>
-      </div>
-    );
+    if (left > TIMING.countdownMs) return <Intro gameId={cur.gameId} round={cur.round} attempt={cur.attempt} />;
+    return <CountdownNumber msLeft={left} />;
   }
-
   if (myScore?.key === key) {
     return (
-      <div className="screen">
-        <h2>Your score: {game.formatScore(myScore.value)}</h2>
-        <p className="waiting">Waiting for {state.players[other(s.role)]?.name}…</p>
+      <div className="panel">
+        <p className="lead">You: <span className="mono">{game.formatScore(myScore.value)}</span></p>
+        <p className="waiting">Waiting for {state.players[other(s.role)]?.name}</p>
       </div>
     );
   }
@@ -165,58 +132,28 @@ function RoundView({ s, state }: { s: SessionView; state: MatchState }) {
   );
 }
 
-function RoundResultView({ state, me }: { state: MatchState; me: PlayerId }) {
-  const r = state.history.at(-1)!;
-  const game = getGame(r.gameId);
-  const headline = r.winner === null ? "Tie! Replaying…" : r.winner === me ? "You win the round!" : `${state.players[r.winner]!.name} wins the round`;
-  return (
-    <div className="screen result" data-testid="round-result">
-      <h2>{headline}</h2>
-      <div className="result__scores">
-        {(["host", "guest"] as const).map((p) => (
-          <div key={p} className={`result__card result__card--${p} ${r.winner === p ? "result__card--win" : r.winner ? "result__card--lose" : ""}`}>
-            <span className="crown">{r.winner === p ? "👑" : ""}</span>
-            <div>{state.players[p]!.name}</div>
-            <div className="result__value">{game.formatScore(r.scores[p])}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MatchOverView({ state, me }: { state: MatchState; me: PlayerId }) {
-  const won = state.winner === me;
+function MatchOver({ state, me }: { state: MatchState; me: "host" | "guest" }) {
+  const winner = state.winner!;
   const iRequested = state.rematchRequested.includes(me);
   const oppRequested = state.rematchRequested.includes(other(me));
   return (
-    <div className="screen over" data-testid="match-over">
-      <h1 className="over__title">{won ? "You win!" : `${state.players[state.winner!]!.name} wins!`}</h1>
-      {state.endReason === "forfeit" && <p>Opponent left the match.</p>}
-      <table className="history">
-        <tbody>
-          {state.history.map((r, i) => {
-            const g = getGame(r.gameId);
-            return (
-              <tr key={i}>
-                <td>{g.emoji} {g.name}</td>
-                <td className={r.winner === "host" ? "win-host" : ""}>{g.formatScore(r.scores.host)}</td>
-                <td className={r.winner === "guest" ? "win-guest" : ""}>{g.formatScore(r.scores.guest)}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="over" data-testid="match-over">
+      <Stamp>K.O.</Stamp>
+      <h1 className={`over__title over__title--${winner === "host" ? "p1" : "p2"}`}>
+        {winner === me ? "You win" : `${state.players[winner]!.name} wins`}
+      </h1>
+      {state.endReason === "forfeit" && <p className="lead">Opponent left the match.</p>}
+      <MatchTable state={state} />
       {state.endReason !== "forfeit" && (me === "host" ? (
-        <button className="btn" onClick={() => hostCtl()?.rematch()} data-testid="rematch">
-          Rematch{oppRequested && " (they want one!)"}
+        <button className="trigger" onClick={() => hostCtl()?.rematch()} data-testid="rematch">
+          {oppRequested ? "Rematch (they're in)" : "Rematch"}
         </button>
       ) : (
-        <button className="btn" disabled={iRequested} onClick={() => guestCtl()?.requestRematch()} data-testid="rematch">
-          {iRequested ? "Asked for a rematch…" : "Ask for a rematch"}
+        <button className="trigger" disabled={iRequested} onClick={() => guestCtl()?.requestRematch()} data-testid="rematch">
+          {iRequested ? "Rematch requested" : "Ask for a rematch"}
         </button>
       ))}
-      <button className="btn btn--ghost" onClick={() => { leave(); navigate("/"); }}>Home</button>
+      <button className="key key--wide" onClick={() => { leave(); navigate("/"); }}>Leave</button>
     </div>
   );
 }
