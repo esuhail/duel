@@ -1,0 +1,10 @@
+body { margin: 0; font-family: system-ui, sans-serif; }
+.screen { max-width: 480px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.btn { padding: 14px; font-size: 18px; }
+.timebar { height: 6px; background: #ddd; }
+.timebar__fill { height: 100%; background: #333; transition: width .1s linear; }
+.reaction { height: 80vh; display: grid; place-items: center; user-select: none; touch-action: manipulation; }
+.reaction--wait { background: #c33; } .reaction--go { background: #2a2; } .reaction--feedback { background: #36c; }
+.reaction__label { color: white; font-size: 32px; font-weight: bold; }
+.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; margin: 4px; }
+.dot--done { background: white; }
