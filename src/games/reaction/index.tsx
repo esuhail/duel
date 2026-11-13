@@ -39,6 +39,7 @@ function Reaction({ puzzle, onFinish }: { puzzle: ReactionPuzzle; onFinish: (n: 
     if (stage === "go") {
       // rAF fires just before the browser paints the green frame, which is
       // the closest JS gets to "the moment the player could see it".
+      greenAt.current = performance.now(); // fallback if a tap beats the first frame
       const raf = requestAnimationFrame((t) => (greenAt.current = t));
       const miss = setTimeout(() => record(PENALTY_MS, "Too slow! +1000 ms"), MISS_AFTER_MS);
       return () => { cancelAnimationFrame(raf); clearTimeout(miss); };
