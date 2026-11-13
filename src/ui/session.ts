@@ -13,6 +13,7 @@ import { GAME_RULES } from "../games/registry";
 import { HostController } from "../host/hostController";
 import { GuestClient, type GuestStatus } from "../net/guestClient";
 import { getTransport } from "../net/select";
+import { trackEvent } from "../analytics";
 
 export type Session =
   | { role: "host"; roomId: string; host: HostController; error?: string }
@@ -36,6 +37,14 @@ export async function startHosting(roomId: string, hostName: string, bestOf: Bes
     const endpoint = await transport.host(roomId);
     const host = new HostController({ endpoint, hostName, bestOf, games: GAME_RULES, now, randomSeed });
     host.subscribe(bump);
+    // Count each finished match once (host only, so a match isn't counted twice).
+    let counted = -1;
+    host.subscribe((s) => {
+      if (s.phase === "matchOver" && counted !== s.matchSeed) {
+        counted = s.matchSeed;
+        trackEvent(s.endReason === "forfeit" ? "match-forfeit" : "match-complete");
+      }
+    });
     current = { role: "host", roomId, host };
     pending = null;
   } catch (e) {
