@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useFinishOnce, useReportProgress, useTimeUp } from "../hooks";
+import { useFinishOnce, useKeys, useReportProgress, useTimeUp } from "../hooks";
 import { type GameProps, defineGame } from "../types";
 import { type ScrambledWord, createUnscramblePuzzle, isSolution } from "./puzzle";
 
@@ -38,6 +38,17 @@ function Unscramble({ puzzle, onFinish, onProgress }: GameProps<ScrambledWord[]>
     }
   };
 
+  useKeys((e) => {
+    const k = e.key.toLowerCase();
+    if (k === "backspace") setPicked((p) => p.slice(0, -1));
+    else if (k === " " || k === "enter") next();
+    else if (/^[a-z]$/.test(k)) {
+      const i = item.letters.findIndex((ch, j) => ch === k && !picked.includes(j));
+      if (i >= 0) pick(i);
+    } else return;
+    e.preventDefault();
+  });
+
   return (
     <div className="unscramble">
       <div className="math__solved">✓ {solved}</div>
@@ -64,6 +75,7 @@ export const unscrambleGame = defineGame<ScrambledWord[]>({
   id: "unscramble",
   name: "Unscramble",
   emoji: "🔤",
+  keyHint: "Type the word, Backspace to undo, Space to skip",
   instructions: "Tap the letters in order to spell the word. Solve as many as you can in 45 seconds.",
   durationMs: 45_000,
   better: "higher",

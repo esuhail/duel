@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useFinishOnce, useReportProgress, useTimeUp } from "../hooks";
+import { useFinishOnce, useKeys, useReportProgress, useTimeUp } from "../hooks";
 import { type GameProps, defineGame } from "../types";
 import { type MathProblem, createMathPuzzle } from "./puzzle";
 
@@ -13,6 +13,7 @@ function QuickMath({ puzzle, onFinish, onProgress }: GameProps<MathProblem[]>) {
   useTimeUp(quickMathGame.durationMs, () => finish(index));
 
   const [misses, setMisses] = useState(0);
+  const [lastRight, setLastRight] = useState(false);
   useReportProgress(onProgress, {
     fraction: Math.min(1, index / 25),
     headline: String(index),
@@ -28,6 +29,7 @@ function QuickMath({ puzzle, onFinish, onProgress }: GameProps<MathProblem[]>) {
     const target = String(p.answer);
     // Auto-submit once enough digits are typed: no "enter" key to aim for.
     if (next.length < target.length) return setInput(next);
+    setLastRight(next === target);
     if (next === target) {
       setIndex((i) => Math.min(i + 1, puzzle.length - 1));
       if (index + 1 >= puzzle.length) finish(index + 1);
@@ -38,10 +40,18 @@ function QuickMath({ puzzle, onFinish, onProgress }: GameProps<MathProblem[]>) {
     setInput("");
   };
 
+  useKeys((e) => {
+    if (/^[0-9]$/.test(e.key)) press(e.key);
+    else if (e.key === "Backspace") press("⌫");
+    else if (e.key === "Escape" || e.key === "Delete") press("C");
+    else return;
+    e.preventDefault();
+  });
+
   return (
     <div className="math">
       <div className="math__solved" data-testid="math-solved">✓ {index}</div>
-      <div className={`math__problem ${shake ? "shake" : ""}`} key={shake} data-testid="math-problem">
+      <div className={`math__problem ${!lastRight && shake ? "shake" : ""} ${index > 0 && !input && lastRight ? "is-right" : ""}`} key={`${shake}:${index}`} data-testid="math-problem">
         {p.a} {p.op} {p.b} = <span className="math__input">{input || "?"}</span>
       </div>
       <div className="numpad">
@@ -59,6 +69,7 @@ export const quickMathGame = defineGame<MathProblem[]>({
   id: "math",
   name: "Quick Math",
   emoji: "🧮",
+  keyHint: "Type the answer with number keys, Backspace to fix",
   instructions: "Solve as many as you can in 30 seconds. Answers submit themselves.",
   durationMs: 30_000,
   better: "higher",

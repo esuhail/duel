@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
-import { useFinishOnce, useReportProgress, useTimeUp } from "../hooks";
+import { useFinishOnce, useKeys, useReportProgress, useTimeUp } from "../hooks";
 import { type GameProps, defineGame } from "../types";
 import { COLORS, type Color, MAX_LENGTH, START_LENGTH, createMemoryPuzzle, flashMs } from "./puzzle";
+
+/** Keys laid out like the pads: Q W on top, A S below. */
+const KEY_TO_COLOR: Record<string, Color> = { q: "red", w: "blue", a: "yellow", s: "green" };
+const COLOR_TO_KEY = Object.fromEntries(Object.entries(KEY_TO_COLOR).map(([k, c]) => [c, k.toUpperCase()])) as Record<Color, string>;
 
 type Stage = { kind: "show"; step: number; lit: boolean } | { kind: "input"; pos: number } | { kind: "between" };
 
@@ -49,6 +53,14 @@ function MemorySequence({ puzzle, onFinish, onProgress }: GameProps<Color[]>) {
     setStage({ kind: "between" });
   };
 
+  useKeys((e) => {
+    const c = KEY_TO_COLOR[e.key.toLowerCase()];
+    if (c) {
+      e.preventDefault();
+      press(c);
+    }
+  });
+
   return (
     <div className="memory">
       <div className="memory__status" data-testid="memory-status">
@@ -62,7 +74,9 @@ function MemorySequence({ puzzle, onFinish, onProgress }: GameProps<Color[]>) {
             onPointerDown={(e) => { e.preventDefault(); press(c); }}
             data-testid={`pad-${c}`}
             aria-label={c}
-          />
+          >
+            <span className="pad__key">{COLOR_TO_KEY[c]}</span>
+          </button>
         ))}
       </div>
     </div>
@@ -73,6 +87,7 @@ export const memoryGame = defineGame<Color[]>({
   id: "memory",
   name: "Memory Sequence",
   emoji: "🧠",
+  keyHint: "Q W A S match the pads, or click them",
   instructions: "Watch the colors flash, then repeat them. Each round adds one more. One mistake ends it.",
   durationMs: 60_000,
   better: "higher",

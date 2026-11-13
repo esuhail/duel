@@ -42,3 +42,21 @@ export function useReportProgress(onProgress: ((p: Progress) => void) | undefine
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 }
+
+/**
+ * Keyboard support for PC players. The handler is kept in a ref so it always
+ * sees the latest state without re-registering the listener every render.
+ * Ignores auto-repeat and keys typed into inputs.
+ */
+export function useKeys(handler: (e: KeyboardEvent) => void) {
+  const ref = useRef(handler);
+  ref.current = handler;
+  useEffect(() => {
+    const on = (e: KeyboardEvent) => {
+      if (e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.target instanceof HTMLInputElement) return;
+      ref.current(e);
+    };
+    window.addEventListener("keydown", on);
+    return () => window.removeEventListener("keydown", on);
+  }, []);
+}

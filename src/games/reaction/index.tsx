@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { type GameProps, defineGame } from "../types";
-import { useFinishOnce, useReportProgress } from "../hooks";
+import { useFinishOnce, useKeys, useReportProgress } from "../hooks";
 import {
   ATTEMPTS,
   MISS_AFTER_MS,
@@ -54,7 +54,14 @@ function Reaction({ puzzle, onFinish, onProgress }: GameProps<ReactionPuzzle>) {
     detail: times.length === ATTEMPTS ? "All tries done" : `Try ${Math.min(times.length + 1, ATTEMPTS)} of ${ATTEMPTS}`,
   });
 
-  const onTap = (e: React.PointerEvent) => {
+  useKeys((e) => {
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      onTap(e);
+    }
+  });
+
+  const onTap = (e: { timeStamp: number }) => {
     if (stage === "wait") record(PENALTY_MS, "Too early! +1000 ms");
     // pointerdown + event.timeStamp (same clock as rAF) avoids click's delay.
     else if (stage === "go") {
@@ -67,7 +74,7 @@ function Reaction({ puzzle, onFinish, onProgress }: GameProps<ReactionPuzzle>) {
     <div className={`reaction reaction--${stage}`} onPointerDown={onTap} data-testid="reaction-pad">
       <div className="reaction__label">
         {stage === "wait" && "Wait for green…"}
-        {stage === "go" && "TAP!"}
+        {stage === "go" && "Hit!"}
         {stage === "feedback" && message}
       </div>
       <div className="reaction__dots">
@@ -83,6 +90,7 @@ export const reactionGame = defineGame<ReactionPuzzle>({
   id: "reaction",
   name: "Reaction",
   emoji: "⚡",
+  keyHint: "Space or click when it turns green",
   instructions: "Tap the moment the screen turns green. 3 tries. Tapping early costs you a second!",
   durationMs: 20_000,
   better: "lower",

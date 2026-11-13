@@ -37,6 +37,8 @@ export interface MiniGame<P = unknown> {
   name: string;
   emoji: string;
   instructions: string;
+  /** Keyboard controls, shown to PC players. */
+  keyHint: string;
   /** Hard cap; the game must call onFinish by then. */
   durationMs: number;
   better: Better;

@@ -20,6 +20,7 @@ export function Practice({ gameId }: { gameId: string }) {
         <h2 className="intro__name">{game.name}</h2>
         <p className="intro__text">{game.instructions}</p>
         <p className="intro__rule">{game.better === "lower" ? "Lowest wins" : "Highest wins"}</p>
+        <p className="kbd-hint">Keyboard: {game.keyHint}</p>
       </div>
       {score !== null && <p className="big-score" data-testid="practice-score">{game.formatScore(score)}</p>}
       <button className="trigger" onClick={() => { setScore(null); setSeed(randomSeed()); }}>

@@ -22,6 +22,7 @@ export function GamePlayer({
     <div className="game-player">
       <div className={low ? "clock is-low" : "clock"}>
         <div className="timebar" aria-hidden="true"><div className="timebar__fill" style={{ width: `${(left / game.durationMs) * 100}%` }} /></div>
+        <span className="kbd-hint clock__hint">{game.keyHint}</span>
         <span className="clock__secs" aria-label={`${Math.ceil(left / 1000)} seconds left`}>{(left / 1000).toFixed(1)}s</span>
       </div>
       <Component puzzle={puzzle} onFinish={onFinish} onProgress={onProgress} />

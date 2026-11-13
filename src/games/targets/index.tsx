@@ -45,6 +45,7 @@ export const targetTapGame = defineGame<Point[]>({
   id: "targets",
   name: "Target Tap",
   emoji: "🎯",
+  keyHint: "Click each target with the mouse",
   instructions: `Tap the ${TARGET_COUNT} targets as fast as you can. They appear one at a time.`,
   durationMs: TARGET_TIME_LIMIT,
   better: "lower",
