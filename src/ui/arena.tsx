@@ -2,42 +2,112 @@
  * Shared "broadcast HUD" pieces used by online and local matches.
  * P1 = host = lime, P2 = guest = vermilion, everywhere.
  */
-import type { CSSProperties, ReactNode } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import type { Progress } from "../games/types";
 import { type MatchState, type PlayerId, type RoundResult, winsNeeded } from "../core/match";
 import { getGame } from "../games/registry";
 
 export const slot = (p: PlayerId) => (p === "host" ? "p1" : "p2");
 
-/** Seam points as [x%, y%]. Shared by the CSS clip-paths and the SVG line. */
+/** Seam points as [x%, y%] of the screen. */
 const SEAM: Array<[number, number]> = [[54, 0], [50, 33], [56, 35], [45, 66], [51, 68], [46, 100]];
-const clip = (edgeX: number) =>
-  `polygon(${edgeX}% 0%, ${SEAM.map(([x, y]) => `${x}% ${y}%`).join(", ")}, ${edgeX}% 100%)`;
+
+const rgba = (hex: string, a: number) => {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+};
 
 /**
- * The background: two hazard-striped territories split by a jagged seam.
- * `shift` slides the seam sideways (in % of the width): +25 gives P1 75%
- * of the screen after a P1 round win.
+ * The background: each player's half is a glowing floor grid, split by a
+ * jagged neon seam. `shift` slides the seam sideways (in % of the width):
+ * +25 gives P1 75% of the screen after a P1 round win.
  *
- * Territories are CSS layers clipped to the seam (so stripes keep their
- * angle at any screen ratio); the seam itself is an SVG line whose stroke
- * stays 3px however the SVG is stretched.
+ * Why a canvas: the same picture built from CSS gradients was re-rasterised
+ * every frame whenever anything on top animated (measured ~4 fps in software
+ * rendering). A canvas is drawn once per resize and then only moved with a
+ * GPU transform, which is effectively free. It's 150% wide so the seam can
+ * slide without exposing an edge.
  */
 export function Field({ shift = 0 }: { shift?: number }) {
-  const move: CSSProperties = { transform: `translateX(${shift}%)` };
-  const points = SEAM.map(([x, y]) => `${x},${y}`).join(" ");
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const draw = () => {
+      const c = ref.current;
+      if (!c) return;
+      const g = c.getContext("2d");
+      if (!g) return;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      const CW = W * 1.5;
+      c.width = Math.round(CW * dpr);
+      c.height = Math.round(H * dpr);
+      c.style.width = `${CW}px`;
+      c.style.height = `${H}px`;
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const css = getComputedStyle(document.documentElement);
+      const color = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
+      const p1 = color("--p1", "#2de2e6");
+      const p2 = color("--p2", "#ff3864");
+      const coin = color("--coin", "#f9c80e");
+      const bg = color("--bg", "#0b0420");
+      const ox = W * 0.25;
+      const seam = SEAM.map(([x, y]) => [ox + (x / 100) * W, (y / 100) * H] as const);
+
+      g.fillStyle = bg;
+      g.fillRect(0, 0, CW, H);
+
+      const side = (edge: number, ink: string, glowX: number) => {
+        g.save();
+        g.beginPath();
+        g.moveTo(edge, 0);
+        for (const [x, y] of seam) g.lineTo(x, y);
+        g.lineTo(edge, H);
+        g.closePath();
+        g.clip();
+        // Horizon glow rising from the bottom.
+        const glow = g.createRadialGradient(glowX, H * 1.15, 0, glowX, H * 1.15, Math.max(W, H) * 0.62);
+        glow.addColorStop(0, rgba(ink, 0.45));
+        glow.addColorStop(1, rgba(ink, 0));
+        g.fillStyle = glow;
+        g.fillRect(0, 0, CW, H);
+        // Floor grid that fades out toward the top of the screen.
+        const fade = g.createLinearGradient(0, 0, 0, H);
+        fade.addColorStop(0, rgba(ink, 0));
+        fade.addColorStop(0.38, rgba(ink, 0));
+        fade.addColorStop(0.75, rgba(ink, 0.38));
+        fade.addColorStop(1, rgba(ink, 0.38));
+        g.fillStyle = fade;
+        for (let x = 0; x < CW; x += 64) g.fillRect(x, 0, 2, H);
+        for (let y = H; y > 0; y -= 40) g.fillRect(0, y, CW, 2);
+        g.restore();
+      };
+      side(0, p1, ox + W * 0.22);
+      side(CW, p2, ox + W * 0.78);
+
+      const stroke = (style: string, width: number, dx = 0) => {
+        g.beginPath();
+        seam.forEach(([x, y], i) => (i ? g.lineTo(x + dx, y) : g.moveTo(x + dx, y)));
+        g.strokeStyle = style;
+        g.lineWidth = width;
+        g.lineJoin = "miter";
+        g.stroke();
+      };
+      stroke(rgba(coin, 0.08), 28);
+      stroke(rgba(coin, 0.18), 12);
+      stroke(p1, 3, -4);
+      stroke(p2, 3, 4);
+      stroke(coin, 3);
+    };
+    draw();
+    window.addEventListener("resize", draw);
+    return () => window.removeEventListener("resize", draw);
+  }, []);
+
   return (
     <div className="field" aria-hidden="true">
-      <div className="field__move" style={move}>
-        <div className="field__side field__side--p1" style={{ clipPath: clip(-80) }} />
-        <div className="field__side field__side--p2" style={{ clipPath: clip(180) }} />
-        <div className="field__vs">VS</div>
-        <svg className="field__seam" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <polyline className="seam seam--p1" points={points} vectorEffect="non-scaling-stroke" />
-          <polyline className="seam seam--p2" points={points} vectorEffect="non-scaling-stroke" />
-          <polyline className="seam seam--core" points={points} vectorEffect="non-scaling-stroke" />
-        </svg>
-      </div>
+      <canvas ref={ref} className="field__canvas" style={{ transform: `translateX(${shift - 25}vw)` }} />
+      <div className="field__vs">VS</div>
       <div className="field__scan" />
     </div>
   );
