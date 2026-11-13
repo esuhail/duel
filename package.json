@@ -1,0 +1,43 @@
+{
+  "name": "duel",
+  "version": "1.0.0",
+  "description": "1v1 minigame duels in the browser, peer-to-peer",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/esuhail/duel.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/esuhail/duel/issues"
+  },
+  "homepage": "https://github.com/esuhail/duel#readme",
+  "dependencies": {
+    "peerjs": "^1.5.5",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@testing-library/react": "^16.3.3",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^6.3.0",
+    "jsdom": "^31.0.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  },
+  "private": true,
+  "type": "module"
+}
