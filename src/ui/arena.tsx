@@ -9,21 +9,37 @@ import { getGame } from "../games/registry";
 
 export const slot = (p: PlayerId) => (p === "host" ? "p1" : "p2");
 
+/** Seam points as [x%, y%]. Shared by the CSS clip-paths and the SVG line. */
+const SEAM: Array<[number, number]> = [[54, 0], [50, 33], [56, 35], [45, 66], [51, 68], [46, 100]];
+const clip = (edgeX: number) =>
+  `polygon(${edgeX}% 0%, ${SEAM.map(([x, y]) => `${x}% ${y}%`).join(", ")}, ${edgeX}% 100%)`;
+
 /**
- * The jagged seam splitting the screen. `shift` slides it sideways
- * (in % of the width): +25 gives P1 75% of the screen on a P1 round win.
+ * The background: two hazard-striped territories split by a jagged seam.
+ * `shift` slides the seam sideways (in % of the width): +25 gives P1 75%
+ * of the screen after a P1 round win.
+ *
+ * Territories are CSS layers clipped to the seam (so stripes keep their
+ * angle at any screen ratio); the seam itself is an SVG line whose stroke
+ * stays 3px however the SVG is stretched.
  */
 export function Field({ shift = 0 }: { shift?: number }) {
-  const seam = "54,0 50,33 56,35 45,66 51,68 46,100";
-  const style: CSSProperties = { transform: `translateX(${shift}px)` };
+  const move: CSSProperties = { transform: `translateX(${shift}%)` };
+  const points = SEAM.map(([x, y]) => `${x},${y}`).join(" ");
   return (
-    <svg className="field" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      <g className="field__move" style={style}>
-        <polygon className="field__p1" points={`-60,0 ${seam} -60,100`} />
-        <polygon className="field__p2" points={`160,0 ${seam} 160,100`} />
-        <polyline className="field__seam" points={seam} vectorEffect="non-scaling-stroke" />
-      </g>
-    </svg>
+    <div className="field" aria-hidden="true">
+      <div className="field__move" style={move}>
+        <div className="field__side field__side--p1" style={{ clipPath: clip(-80) }} />
+        <div className="field__side field__side--p2" style={{ clipPath: clip(180) }} />
+        <div className="field__vs">VS</div>
+        <svg className="field__seam" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <polyline className="seam seam--p1" points={points} vectorEffect="non-scaling-stroke" />
+          <polyline className="seam seam--p2" points={points} vectorEffect="non-scaling-stroke" />
+          <polyline className="seam seam--core" points={points} vectorEffect="non-scaling-stroke" />
+        </svg>
+      </div>
+      <div className="field__scan" />
+    </div>
   );
 }
 
@@ -137,6 +153,7 @@ export function Intro({ gameId, round, attempt, extra }: { gameId: string; round
       <h2 className="intro__name">{game.name}</h2>
       <p className="intro__text">{game.instructions}</p>
       <p className="intro__rule">{game.better === "lower" ? "Lowest wins" : "Highest wins"}</p>
+      <p className="kbd-hint">Keyboard: {game.keyHint}</p>
       {extra}
     </div>
   );

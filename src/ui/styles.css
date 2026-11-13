@@ -54,13 +54,45 @@ button:disabled { cursor: not-allowed; }
 .p1 { color: var(--p1); }
 .p2 { color: var(--p2); }
 
-/* ---------- the seam ---------- */
+/* ---------- the field: two striped territories and the seam ---------- */
 
-.field { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; }
-.field__move { transition: transform 0.6s var(--spring); }
-.field__p1 { fill: var(--p1); fill-opacity: 0.07; }
-.field__p2 { fill: var(--p2); fill-opacity: 0.08; }
-.field__seam { fill: none; stroke: var(--white); stroke-width: 3px; stroke-linejoin: miter; }
+.field { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.field__move { position: absolute; inset: 0; transition: transform 0.7s var(--spring); }
+.field__side { position: absolute; inset: 0; }
+/* Hazard stripes lean away from the seam on each side, like two corners of a ring. */
+.field__side--p1 {
+  background:
+    repeating-linear-gradient(45deg, rgba(204, 255, 0, 0.075) 0 2px, transparent 2px 18px),
+    linear-gradient(90deg, rgba(204, 255, 0, 0.02), rgba(204, 255, 0, 0.085));
+}
+.field__side--p2 {
+  background:
+    repeating-linear-gradient(-45deg, rgba(255, 42, 0, 0.09) 0 2px, transparent 2px 18px),
+    linear-gradient(270deg, rgba(255, 42, 0, 0.025), rgba(255, 42, 0, 0.1));
+}
+.field__vs {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-8deg);
+  font-family: var(--display);
+  font-size: min(42vw, 52vh);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.07);
+}
+.field__seam { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.seam { fill: none; stroke-linejoin: miter; }
+.seam--core { stroke: var(--white); stroke-width: 3px; }
+/* Colour echoes offset either side of the seam: a broadcast-glitch edge. */
+.seam--p1 { stroke: var(--p1); stroke-width: 3px; transform: translateX(-0.45px); opacity: 0.9; }
+.seam--p2 { stroke: var(--p2); stroke-width: 3px; transform: translateX(0.45px); opacity: 0.9; }
+.field__scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px);
+}
 
 /* ---------- landing / lobby ---------- */
 
@@ -405,9 +437,9 @@ kbd.p2 { background: var(--p2); }
 .memory__status { font-weight: 800; font-size: 18px; text-align: center; }
 .memory__pads { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; min-height: 50dvh; }
 .memory__pads[data-stage="show"], .memory__pads[data-stage="between"] { pointer-events: none; }
-.pad { border: var(--edge); opacity: 0.3; transition: opacity 0.06s, transform 0.06s; }
-.memory__pads[data-stage="input"] .pad { opacity: 0.7; }
-.memory__pads .pad--lit { opacity: 1; transform: scale(1.03); box-shadow: 6px 6px 0 var(--white); }
+.pad { border: var(--edge); filter: brightness(0.32) saturate(0.8); transition: filter 0.06s, transform 0.06s; }
+.memory__pads[data-stage="input"] .pad { filter: brightness(0.7); }
+.memory__pads .pad--lit { filter: none; transform: scale(1.03); box-shadow: 6px 6px 0 var(--white); }
 .pad--red { background: var(--p2); }
 .pad--blue { background: #2d6bff; }
 .pad--yellow { background: #ffe600; }
@@ -605,6 +637,102 @@ kbd.p2 { background: var(--p2); }
   .how__games { display: block; font-size: 14px; color: rgba(255, 255, 255, 0.65); max-width: 46ch; }
   .home__practice { justify-content: flex-start; }
 }
+
+/* ---------- hover: only on devices that really hover (no sticky states on phones) ---------- */
+
+.kbd-hint { display: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  .kbd-hint { display: block; font-size: 13px; color: rgba(255, 255, 255, 0.6); }
+  .clock__hint { display: inline; white-space: nowrap; }
+
+  /* Primary: lifts off its shadow and starts "charging" with moving stripes. */
+  .trigger:hover:not(:disabled) {
+    transform: translate(-3px, -3px);
+    box-shadow: 10px 10px 0 var(--white);
+    background-image: repeating-linear-gradient(-45deg, transparent 0 12px, rgba(0, 0, 0, 0.12) 12px 24px);
+    background-size: 34px 34px;
+    animation: charge 0.5s linear infinite;
+  }
+  .trigger--huge:hover:not(:disabled) { transform: rotate(-1.5deg) translate(-3px, -3px); }
+
+  /* Secondary: inverts to a solid white slab with a lime shadow. */
+  .key:hover { background: var(--white); color: var(--black); box-shadow: 4px 4px 0 var(--p1); }
+
+  /* Physical keys rise a little, like a switch about to be pressed. */
+  .keycap:hover, .numpad__key:hover, .tile:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #77777d; background: var(--white); }
+
+  .seg__opt:not(.is-on):hover { background: rgba(255, 255, 255, 0.14); }
+  .textlink:hover { background: var(--white); color: var(--black); text-decoration: none; }
+  .memory__pads[data-stage="input"] .pad:hover { filter: brightness(0.95); }
+  .duel__pad:hover { border-width: 6px; }
+  .targets, .reaction { cursor: crosshair; }
+  .target:hover { transform: translate(-50%, -50%) scale(1.08); }
+}
+
+@keyframes charge { to { background-position: 34px 0; } }
+
+/* ---------- moments that deserve motion ---------- */
+
+/* Round intro wipes in sideways, like a broadcast lower-third. */
+.intro { animation: wipe-in 0.45s cubic-bezier(0.2, 0.9, 0.2, 1) both; }
+@keyframes wipe-in { from { clip-path: inset(0 100% 0 0); transform: translateX(-24px); } to { clip-path: inset(0 0 0 0); transform: none; } }
+
+/* Player 2 arriving in the lobby flashes their colour once. */
+.lobby__status.is-joined { color: var(--black); background: var(--p2); padding: 2px 10px; animation: slam 0.4s var(--spring); }
+.trigger.is-ready { animation: ready 1.6s ease-in-out infinite; }
+@keyframes ready { 50% { box-shadow: 7px 7px 0 var(--p2); } }
+
+/* Typed code letters drop into their slot. */
+.code__cell.is-filled { animation: slam 0.25s var(--spring); }
+
+/* Final table counts the rounds back in, one by one. */
+.history tbody tr { animation: row-in 0.35s var(--spring) both; }
+.history tbody tr:nth-child(2) { animation-delay: 0.08s; }
+.history tbody tr:nth-child(3) { animation-delay: 0.16s; }
+.history tbody tr:nth-child(4) { animation-delay: 0.24s; }
+.history tbody tr:nth-child(5) { animation-delay: 0.32s; }
+@keyframes row-in { from { transform: translateX(-30px); opacity: 0; } }
+.over__title { animation: slam 0.5s 0.25s var(--spring) both; }
+
+/* Correct answer: the problem flashes lime and pops. */
+.math__problem.is-right { animation: right 0.25s ease-out; }
+@keyframes right { 0% { background: var(--p1); color: var(--black); transform: scale(1.04); } }
+
+/* ---------- desktop: games use the whole stage ---------- */
+
+@media (min-width: 1024px) {
+  .arena__body { grid-template-columns: minmax(220px, 18vw) 1fr minmax(220px, 18vw); }
+  .stage:has(> .game-player) { align-items: stretch; justify-content: stretch; }
+  .game-player { max-width: none; height: 100%; }
+
+  .reaction { min-height: 0; }
+  .reaction__label { font-size: 72px; }
+  .reaction--go .reaction__label { font-size: 180px; }
+  .dot { width: 26px; height: 26px; }
+
+  .math { display: grid; grid-template-columns: 1.2fr 1fr; grid-template-rows: auto 1fr; gap: 20px 32px; align-items: center; }
+  .math__solved { grid-column: 1 / -1; justify-self: start; font-size: 22px; }
+  .math__problem { font-size: clamp(56px, 6vw, 96px); padding: 40px 16px; }
+  .numpad { margin: 0; gap: 12px; }
+  .numpad__key { min-height: 84px; font-size: 38px; }
+
+  .targets { min-height: 0; }
+  .target { width: 84px; height: 84px; }
+
+  .unscramble { justify-content: center; gap: 36px; }
+  .slot, .tile { width: 96px; height: 108px; font-size: 54px; }
+  .tiles { margin: 0; }
+  .unscramble .math__solved { align-self: center; }
+
+  .memory__pads { min-height: 0; gap: 18px; }
+  .pad__key { font-family: var(--display); font-size: 40px; color: rgba(0, 0, 0, 0.55); }
+
+  .duel__key { font-size: 120px; }
+  .duel__light { font-size: 80px; }
+}
+.pad__key { display: none; }
+@media (min-width: 1024px) and (hover: hover) { .pad__key { display: block; } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }

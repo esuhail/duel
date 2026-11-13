@@ -101,8 +101,8 @@ function Lobby({ s, state }: { s: SessionView; state: MatchState }) {
           </button>
         ))}
       </div>
-      <p className="lobby__status" data-testid="lobby-status">{guest ? `${guest.name} joined!` : "Waiting for player 2…"}</p>
-      <button className="trigger" disabled={!guest?.connected} onClick={() => hostCtl()?.start()} data-testid="start-match">
+      <p className={guest ? "lobby__status is-joined" : "lobby__status"} data-testid="lobby-status">{guest ? `${guest.name} joined!` : "Waiting for player 2…"}</p>
+      <button className={guest?.connected ? "trigger is-ready" : "trigger"} disabled={!guest?.connected} onClick={() => hostCtl()?.start()} data-testid="start-match">
         Fight
       </button>
       <p className="muted">{guest?.connected ? "Rounds are picked at random, no repeats until every game is played." : "Fight unlocks when player 2 joins."}</p>

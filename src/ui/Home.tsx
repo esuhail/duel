@@ -59,7 +59,7 @@ export function Home() {
         <p className="lead">Got a code? Punch it in.</p>
         <div className="code code--input" data-testid="code-input">
           {Array.from({ length: CODE_LENGTH }, (_, i) => (
-            <span key={i} className={i === code.length ? "code__cell is-next" : "code__cell"}>{code[i] ?? ""}</span>
+            <span key={`${i}${code[i] ?? ""}`} className={i === code.length ? "code__cell is-next" : code[i] ? "code__cell is-filled" : "code__cell"}>{code[i] ?? ""}</span>
           ))}
         </div>
         <div className="keypad">
