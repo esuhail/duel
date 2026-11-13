@@ -44,7 +44,16 @@ export function Home() {
 
   return (
     <div className="home">
-      <h1 className="title-stamp" aria-label="Duel">DUEL</h1>
+      <div className="home__brand">
+        <h1 className="title-stamp" aria-label="Duel">DUEL</h1>
+        <ol className="how">
+          <li><span><b>Quick duel</b> opens a room with a 4-letter code.</span></li>
+          <li><span>Your friend punches in the code or scans the QR.</span></li>
+          <li><span>Best of 3 rounds of 20 to 60 second minigames. Same puzzle for both of you.</span></li>
+        </ol>
+        <p className="how__games">{GAMES.length} games: {GAMES.map((g) => g.name).join(", ")}.</p>
+      </div>
+      <div className="home__play">
 
       <section className="join" aria-label="Join a room">
         <p className="lead">Got a code? Punch it in.</p>
@@ -64,6 +73,7 @@ export function Home() {
 
       <button className="trigger trigger--huge" onClick={quickDuel} data-testid="create-match">Quick duel</button>
 
+      </div>
       <footer className="home__more">
         <label className="name-field">
           Name
