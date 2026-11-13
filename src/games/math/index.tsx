@@ -1,0 +1,57 @@
+import { useState } from "react";
+import { useFinishOnce, useTimeUp } from "../hooks";
+import { defineGame } from "../types";
+import { type MathProblem, createMathPuzzle } from "./puzzle";
+
+const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "C"];
+
+function QuickMath({ puzzle, onFinish }: { puzzle: MathProblem[]; onFinish: (n: number) => void }) {
+  const finish = useFinishOnce(onFinish);
+  const [index, setIndex] = useState(0);
+  const [input, setInput] = useState("");
+  const [shake, setShake] = useState(0);
+  useTimeUp(quickMathGame.durationMs, () => finish(index));
+
+  const p = puzzle[index]!;
+  const press = (k: string) => {
+    if (k === "⌫") return setInput((s) => s.slice(0, -1));
+    if (k === "C") return setInput("");
+    const next = input + k;
+    const target = String(p.answer);
+    // Auto-submit once enough digits are typed: no "enter" key to aim for.
+    if (next.length < target.length) return setInput(next);
+    if (next === target) {
+      setIndex((i) => Math.min(i + 1, puzzle.length - 1));
+      if (index + 1 >= puzzle.length) finish(index + 1);
+    } else setShake((n) => n + 1);
+    setInput("");
+  };
+
+  return (
+    <div className="math">
+      <div className="math__solved" data-testid="math-solved">✓ {index}</div>
+      <div className={`math__problem ${shake ? "shake" : ""}`} key={shake} data-testid="math-problem">
+        {p.a} {p.op} {p.b} = <span className="math__input">{input || "?"}</span>
+      </div>
+      <div className="numpad">
+        {KEYS.map((k) => (
+          <button key={k} className="numpad__key" onPointerDown={(e) => { e.preventDefault(); press(k); }} data-testid={`key-${k}`}>
+            {k}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export const quickMathGame = defineGame<MathProblem[]>({
+  id: "math",
+  name: "Quick Math",
+  emoji: "🧮",
+  instructions: "Solve as many as you can in 30 seconds. Answers submit themselves.",
+  durationMs: 30_000,
+  better: "higher",
+  formatScore: (n) => `${n} solved`,
+  createPuzzle: createMathPuzzle,
+  Component: QuickMath,
+});
