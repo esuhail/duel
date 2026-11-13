@@ -1,5 +1,8 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { WORDS } from "../../src/games/unscramble/words";
+
+/** The element can vanish when the game's timer ends mid-move; that's fine. */
+const tap = (l: Locator) => l.dispatchEvent("pointerdown", undefined, { timeout: 1000 }).catch(() => {});
 
 /**
  * Bots for the e2e test. Each call makes one move in whatever game is on
@@ -11,7 +14,7 @@ export async function playGame(page: Page, weak: boolean) {
     const go = page.locator(".reaction--go");
     if (await go.isVisible()) {
       if (weak) await page.waitForTimeout(60);
-      await go.dispatchEvent("pointerdown");
+      await tap(go);
     } else await page.waitForTimeout(30);
     return;
   }
@@ -22,7 +25,7 @@ export async function playGame(page: Page, weak: boolean) {
     if (m) {
       const [a, b] = [Number(m[1]), Number(m[3])];
       const ans = m[2] === "+" ? a + b : m[2] === "−" ? a - b : a * b;
-      for (const d of String(ans)) await page.getByTestId(`key-${d}`).dispatchEvent("pointerdown");
+      for (const d of String(ans)) await tap(page.getByTestId(`key-${d}`));
       await page.waitForTimeout(weak ? 600 : 150);
     }
     return;
@@ -30,7 +33,7 @@ export async function playGame(page: Page, weak: boolean) {
 
   if (await page.getByTestId("target").isVisible()) {
     if (weak) await page.waitForTimeout(150);
-    await page.getByTestId("target").dispatchEvent("pointerdown").catch(() => {});
+    await tap(page.getByTestId("target"));
     return;
   }
 
@@ -43,7 +46,7 @@ export async function playGame(page: Page, weak: boolean) {
     for (const ch of word) {
       const i = letters.findIndex((l, j) => l === ch && !used.has(j));
       used.add(i);
-      await page.getByTestId(`tile-${i}`).dispatchEvent("pointerdown");
+      await tap(page.getByTestId(`tile-${i}`));
     }
     await page.waitForTimeout(weak ? 1500 : 300);
     return;
@@ -60,7 +63,7 @@ export async function playGame(page: Page, weak: boolean) {
       for (const [i, c] of seq.entries()) {
         const wrong = seq.length > limit && i === seq.length - 1;
         const color = wrong ? (c === "red" ? "blue" : "red") : c;
-        await page.getByTestId(`pad-${color}`).dispatchEvent("pointerdown");
+        await tap(page.getByTestId(`pad-${color}`));
       }
     }
     await page.waitForTimeout(100);
