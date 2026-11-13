@@ -136,4 +136,18 @@ describe("host + guest over memory transport", () => {
     expect(guest.state!.phase).toBe("countdown");
     expect(guest.state!.players.host.wins).toBe(0);
   });
+
+  test("live progress travels both ways, outside the event log", async () => {
+    const { host, guest } = await setup();
+    host.start();
+    await vi.advanceTimersByTimeAsync(100);
+    const { round, attempt } = host.state.current!;
+    const p = { fraction: 0.4, headline: "6", unit: "solved", detail: "No mistakes" };
+    guest.reportProgress(round, attempt, p);
+    host.reportProgress(round, attempt, { ...p, headline: "9" });
+    await vi.advanceTimersByTimeAsync(50);
+    expect(host.progress.guest).toEqual({ round, attempt, p });
+    expect(guest.progress.host?.p.headline).toBe("9");
+    expect(guest.state).toEqual(host.state); // match state untouched
+  });
 });

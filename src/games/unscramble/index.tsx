@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useFinishOnce, useTimeUp } from "../hooks";
-import { defineGame } from "../types";
+import { useFinishOnce, useReportProgress, useTimeUp } from "../hooks";
+import { type GameProps, defineGame } from "../types";
 import { type ScrambledWord, createUnscramblePuzzle, isSolution } from "./puzzle";
 
-function Unscramble({ puzzle, onFinish }: { puzzle: ScrambledWord[]; onFinish: (n: number) => void }) {
+function Unscramble({ puzzle, onFinish, onProgress }: GameProps<ScrambledWord[]>) {
   const finish = useFinishOnce(onFinish);
   const [index, setIndex] = useState(0);
   const [solved, setSolved] = useState(0);
@@ -11,6 +11,14 @@ function Unscramble({ puzzle, onFinish }: { puzzle: ScrambledWord[]; onFinish: (
   const [picked, setPicked] = useState<number[]>([]);
   const [shake, setShake] = useState(0);
   useTimeUp(unscrambleGame.durationMs, () => finish(solved));
+
+  const skipped = index - solved;
+  useReportProgress(onProgress, {
+    fraction: Math.min(1, solved / 15),
+    headline: String(solved),
+    unit: solved === 1 ? "word" : "words",
+    detail: skipped ? `${skipped} skipped` : "No skips",
+  });
 
   const item = puzzle[index % puzzle.length]!;
   const next = () => {

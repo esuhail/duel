@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useFinishOnce, useTimeUp } from "../hooks";
-import { defineGame } from "../types";
+import { useFinishOnce, useReportProgress, useTimeUp } from "../hooks";
+import { type GameProps, defineGame } from "../types";
 import { COLORS, type Color, MAX_LENGTH, START_LENGTH, createMemoryPuzzle, flashMs } from "./puzzle";
 
 type Stage = { kind: "show"; step: number; lit: boolean } | { kind: "input"; pos: number } | { kind: "between" };
 
-function MemorySequence({ puzzle, onFinish }: { puzzle: Color[]; onFinish: (n: number) => void }) {
+function MemorySequence({ puzzle, onFinish, onProgress }: GameProps<Color[]>) {
   const finish = useFinishOnce(onFinish);
   const [length, setLength] = useState(START_LENGTH);
   const [stage, setStage] = useState<Stage>({ kind: "between" });
@@ -28,6 +28,13 @@ function MemorySequence({ puzzle, onFinish }: { puzzle: Color[]; onFinish: (n: n
     }
     return () => clearTimeout(id);
   }, [stage, length]);
+
+  useReportProgress(onProgress, {
+    fraction: Math.min(1, best / 12),
+    headline: String(best),
+    unit: "long",
+    detail: stage.kind === "input" ? `Repeating ${length}` : `Watching ${length}`,
+  });
 
   const lit = stage.kind === "show" && stage.lit ? puzzle[stage.step] : flash;
 

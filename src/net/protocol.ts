@@ -1,5 +1,9 @@
 /**
- * Every message that crosses the network. Kept as plain JSON-able objects.
+ * Every message that crosses the network.
+ *
+ * Live progress (`progress`) is deliberately NOT a reducer event: it's
+ * cosmetic, frequent, and safe to lose, so it travels beside the event log
+ * instead of inside it. The rules never depend on it. Kept as plain JSON-able objects.
  *
  * Design note: instead of a separate message type per rule (config,
  * roundStart, roundResult, matchOver...), the host forwards *reducer events*
@@ -9,6 +13,7 @@
  * two screens to disagree.
  */
 import type { MatchEvent, MatchState } from "../core/match";
+import type { Progress } from "../games/types";
 
 export const PROTOCOL_VERSION = 1;
 
@@ -16,13 +21,15 @@ export type HostToGuest =
   | { t: "sync"; v: number; state: MatchState } // full snapshot on join / rejoin
   | { t: "event"; event: MatchEvent } // every state change, in order
   | { t: "pong"; t0: number; hostTime: number } // clock sync reply
+  | { t: "progress"; round: number; attempt: number; p: Progress } // host's live progress
   | { t: "reject"; reason: string };
 
 export type GuestToHost =
   | { t: "hello"; v: number; name: string; token: string } // token = same guest on rejoin
   | { t: "score"; round: number; attempt: number; value: number }
   | { t: "rematch" }
-  | { t: "ping"; t0: number };
+  | { t: "ping"; t0: number }
+  | { t: "progress"; round: number; attempt: number; p: Progress }; // guest's live progress
 
 const isObj = (x: unknown): x is Record<string, unknown> => typeof x === "object" && x !== null;
 const isNum = (x: unknown): x is number => typeof x === "number" && Number.isFinite(x);
@@ -45,7 +52,17 @@ export function parseGuestMessage(x: unknown): GuestToHost | null {
       return { t: "rematch" };
     case "ping":
       return isNum(x.t0) ? { t: "ping", t0: x.t0 } : null;
+    case "progress": {
+      const p = parseProgress(x.p);
+      return p && isNum(x.round) && isNum(x.attempt) ? { t: "progress", round: x.round, attempt: x.attempt, p } : null;
+    }
     default:
       return null;
   }
+}
+
+export function parseProgress(x: unknown): Progress | null {
+  if (!isObj(x)) return null;
+  if (!isNum(x.fraction) || !isStr(x.headline, 12) || !isStr(x.unit, 24) || !isStr(x.detail, 40)) return null;
+  return { fraction: Math.max(0, Math.min(1, x.fraction)), headline: x.headline, unit: x.unit, detail: x.detail };
 }

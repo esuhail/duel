@@ -1,16 +1,24 @@
 import { useState } from "react";
-import { useFinishOnce, useTimeUp } from "../hooks";
-import { defineGame } from "../types";
+import { useFinishOnce, useReportProgress, useTimeUp } from "../hooks";
+import { type GameProps, defineGame } from "../types";
 import { type MathProblem, createMathPuzzle } from "./puzzle";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "C"];
 
-function QuickMath({ puzzle, onFinish }: { puzzle: MathProblem[]; onFinish: (n: number) => void }) {
+function QuickMath({ puzzle, onFinish, onProgress }: GameProps<MathProblem[]>) {
   const finish = useFinishOnce(onFinish);
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState("");
   const [shake, setShake] = useState(0);
   useTimeUp(quickMathGame.durationMs, () => finish(index));
+
+  const [misses, setMisses] = useState(0);
+  useReportProgress(onProgress, {
+    fraction: Math.min(1, index / 25),
+    headline: String(index),
+    unit: "solved",
+    detail: misses ? `${misses} wrong` : "No mistakes",
+  });
 
   const p = puzzle[index]!;
   const press = (k: string) => {
@@ -23,7 +31,10 @@ function QuickMath({ puzzle, onFinish }: { puzzle: MathProblem[]; onFinish: (n: 
     if (next === target) {
       setIndex((i) => Math.min(i + 1, puzzle.length - 1));
       if (index + 1 >= puzzle.length) finish(index + 1);
-    } else setShake((n) => n + 1);
+    } else {
+      setShake((n) => n + 1);
+      setMisses((n) => n + 1);
+    }
     setInput("");
   };
 

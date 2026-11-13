@@ -17,6 +17,7 @@ import {
   matchReducer,
   nextRoundStart,
 } from "../core/match";
+import type { Progress } from "../games/types";
 import { PROTOCOL_VERSION, parseGuestMessage, type HostToGuest } from "../net/protocol";
 import type { Connection, HostEndpoint } from "../net/transport";
 
@@ -42,6 +43,8 @@ export interface HostOptions {
 
 export class HostController {
   state: MatchState;
+  /** Latest live progress per player, tagged with the round it belongs to. */
+  progress: Partial<Record<"host" | "guest", { round: number; attempt: number; p: Progress }>> = {};
   readonly timing: typeof TIMING;
   private guestConn: Connection | null = null;
   private guestToken: string | null = null;
@@ -72,6 +75,17 @@ export class HostController {
 
   submitScore(round: number, attempt: number, value: number) {
     this.dispatch({ type: "score", player: "host", round, attempt, value });
+  }
+
+  /** Host's own live progress: kept locally and forwarded to the guest. */
+  reportProgress(round: number, attempt: number, p: Progress) {
+    this.progress = { ...this.progress, host: { round, attempt, p } };
+    this.send({ t: "progress", round, attempt, p });
+    this.notify();
+  }
+
+  private notify() {
+    for (const cb of this.listeners) cb(this.state);
   }
 
   /** Each side flips countdown -> playing locally when its clock hits startAt. */
@@ -145,6 +159,10 @@ export class HostController {
       if (conn !== this.guestConn) return; // only the seated guest can act
       if (msg.t === "score") this.dispatch({ type: "score", player: "guest", round: msg.round, attempt: msg.attempt, value: msg.value });
       if (msg.t === "rematch") this.dispatch({ type: "rematchRequest", player: "guest" });
+      if (msg.t === "progress") {
+        this.progress = { ...this.progress, guest: { round: msg.round, attempt: msg.attempt, p: msg.p } };
+        this.notify();
+      }
     });
     conn.onClose(() => {
       if (conn !== this.guestConn) return;

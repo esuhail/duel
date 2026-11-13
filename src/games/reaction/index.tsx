@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { defineGame } from "../types";
-import { useFinishOnce } from "../hooks";
+import { type GameProps, defineGame } from "../types";
+import { useFinishOnce, useReportProgress } from "../hooks";
 import {
   ATTEMPTS,
   MISS_AFTER_MS,
@@ -12,7 +12,7 @@ import {
 
 type Stage = "wait" | "go" | "feedback";
 
-function Reaction({ puzzle, onFinish }: { puzzle: ReactionPuzzle; onFinish: (n: number) => void }) {
+function Reaction({ puzzle, onFinish, onProgress }: GameProps<ReactionPuzzle>) {
   const finish = useFinishOnce(onFinish);
   const [attempt, setAttempt] = useState(0);
   const [stage, setStage] = useState<Stage>("wait");
@@ -46,6 +46,13 @@ function Reaction({ puzzle, onFinish }: { puzzle: ReactionPuzzle; onFinish: (n: 
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, attempt]);
+
+  useReportProgress(onProgress, {
+    fraction: times.length / ATTEMPTS,
+    headline: times.length ? String(averageMs(times)) : "0",
+    unit: "ms avg",
+    detail: times.length === ATTEMPTS ? "All tries done" : `Try ${Math.min(times.length + 1, ATTEMPTS)} of ${ATTEMPTS}`,
+  });
 
   const onTap = (e: React.PointerEvent) => {
     if (stage === "wait") record(PENALTY_MS, "Too early! +1000 ms");

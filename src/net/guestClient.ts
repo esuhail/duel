@@ -4,6 +4,7 @@
  * reducer so both screens agree.
  */
 import { type ClockSample, estimateOffset } from "../core/clock";
+import type { Progress } from "../games/types";
 import { type MatchState, matchReducer } from "../core/match";
 import { type GuestToHost, type HostToGuest, PROTOCOL_VERSION } from "./protocol";
 import type { Connection, Transport } from "./transport";
@@ -28,6 +29,8 @@ export class GuestClient {
   /** hostClock - guestClock, ms. */
   offset = 0;
   rtt = 0;
+  /** Latest live progress per player, tagged with its round. */
+  progress: Partial<Record<"host" | "guest", { round: number; attempt: number; p: Progress }>> = {};
   private conn: Connection | null = null;
   private samples: ClockSample[] = [];
   private listeners = new Set<() => void>();
@@ -64,6 +67,12 @@ export class GuestClient {
 
   submitScore(round: number, attempt: number, value: number) {
     this.send({ t: "score", round, attempt, value });
+  }
+
+  reportProgress(round: number, attempt: number, p: Progress) {
+    this.progress = { ...this.progress, guest: { round, attempt, p } };
+    this.send({ t: "progress", round, attempt, p });
+    this.emit();
   }
 
   requestRematch() {
@@ -113,6 +122,10 @@ export class GuestClient {
         if (est) ({ offset: this.offset, rtt: this.rtt } = est);
         break;
       }
+      case "progress":
+        this.progress = { ...this.progress, host: { round: m.round, attempt: m.attempt, p: m.p } };
+        this.emit();
+        break;
       case "reject":
         this.status = "rejected";
         this.error = m.reason;

@@ -8,6 +8,7 @@
 import { useSyncExternalStore } from "react";
 import { now } from "../core/clock";
 import type { BestOf, MatchState, PlayerId } from "../core/match";
+import type { Progress } from "../games/types";
 import { randomSeed } from "../core/rng";
 import { GAME_RULES } from "../games/registry";
 import { HostController } from "../host/hostController";
@@ -103,6 +104,21 @@ export interface SessionView {
   go: () => void;
   submitScore: (round: number, attempt: number, value: number) => void;
   rttMs: number;
+  /** Live progress for the current round only (stale rounds are dropped). */
+  progress: Partial<Record<PlayerId, Progress>>;
+  reportProgress: (round: number, attempt: number, p: Progress) => void;
+}
+
+type ProgressMap = Partial<Record<PlayerId, { round: number; attempt: number; p: Progress }>>;
+function currentProgress(state: MatchState | null, map: ProgressMap): Partial<Record<PlayerId, Progress>> {
+  const cur = state?.current;
+  const out: Partial<Record<PlayerId, Progress>> = {};
+  if (!cur) return out;
+  for (const k of ["host", "guest"] as const) {
+    const e = map[k];
+    if (e && e.round === cur.round && e.attempt === cur.attempt) out[k] = e.p;
+  }
+  return out;
 }
 
 function view(s: Session): SessionView {
@@ -112,6 +128,7 @@ function view(s: Session): SessionView {
       role: "host", roomId: s.roomId, state: h.state, status: "hosting", error: "",
       localStartAt: () => h.localStartAt(), go: () => h.go(),
       submitScore: (r, a, v) => h.submitScore(r, a, v), rttMs: 0,
+      progress: currentProgress(h.state, h.progress), reportProgress: (r, a, p) => h.reportProgress(r, a, p),
     };
   }
   const g = s.guest;
@@ -119,6 +136,7 @@ function view(s: Session): SessionView {
     role: "guest", roomId: s.roomId, state: g.state, status: g.status, error: g.error,
     localStartAt: () => g.localStartAt(), go: () => g.go(),
     submitScore: (r, a, v) => g.submitScore(r, a, v), rttMs: g.rtt,
+    progress: currentProgress(g.state, g.progress), reportProgress: (r, a, p) => g.reportProgress(r, a, p),
   };
 }
 

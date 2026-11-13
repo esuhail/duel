@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { Progress } from "./types";
 
 /** Calls `onTimeUp` once after `ms`. The latest callback is always used. */
 export function useTimeUp(ms: number, onTimeUp: () => void) {
@@ -29,4 +30,15 @@ export function useCountdown(ms: number): number {
     return () => clearInterval(id);
   }, [ms, start]);
   return left;
+}
+
+/** Reports progress whenever its content changes (not on every render). */
+export function useReportProgress(onProgress: ((p: Progress) => void) | undefined, p: Progress) {
+  const key = `${p.fraction}|${p.headline}|${p.unit}|${p.detail}`;
+  const cb = useRef(onProgress);
+  cb.current = onProgress;
+  useEffect(() => {
+    cb.current?.(p);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 }

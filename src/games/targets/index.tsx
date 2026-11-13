@@ -1,13 +1,20 @@
 import { useRef, useState } from "react";
-import { useFinishOnce, useTimeUp } from "../hooks";
-import { defineGame } from "../types";
+import { useFinishOnce, useReportProgress, useTimeUp } from "../hooks";
+import { type GameProps, defineGame } from "../types";
 import { TARGET_COUNT, TARGET_TIME_LIMIT, type Point, createTargetsPuzzle, timeoutScore } from "./puzzle";
 
-function TargetTap({ puzzle, onFinish }: { puzzle: Point[]; onFinish: (n: number) => void }) {
+function TargetTap({ puzzle, onFinish, onProgress }: GameProps<Point[]>) {
   const finish = useFinishOnce(onFinish);
   const [hit, setHit] = useState(0);
   const startedAt = useRef(performance.now());
   useTimeUp(TARGET_TIME_LIMIT, () => finish(timeoutScore(hit)));
+
+  useReportProgress(onProgress, {
+    fraction: hit / TARGET_COUNT,
+    headline: String(hit),
+    unit: `of ${TARGET_COUNT} hit`,
+    detail: hit === TARGET_COUNT ? "Cleared" : `${TARGET_COUNT - hit} to go`,
+  });
 
   const p = puzzle[hit];
   const tap = (e: React.PointerEvent) => {

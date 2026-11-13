@@ -1,10 +1,27 @@
 import type { ComponentType } from "react";
 import type { Better } from "../core/match";
 
+/**
+ * A snapshot of how a player is doing mid-round, shown live to the opponent.
+ * Cosmetic only: the round is still decided by the final score.
+ */
+export interface Progress {
+  /** 0..1, how full the meter is. Same scale for both players. */
+  fraction: number;
+  /** The big number, e.g. "12" or "241". */
+  headline: string;
+  /** What the number means, e.g. "solved" or "ms avg". */
+  unit: string;
+  /** One short line of context, e.g. "Try 2 of 3". */
+  detail: string;
+}
+
 export interface GameProps<P> {
   puzzle: P;
   /** Call exactly once with the final score. */
   onFinish: (score: number) => void;
+  /** Call whenever the visible progress changes (optional). */
+  onProgress?: (p: Progress) => void;
 }
 
 /**
