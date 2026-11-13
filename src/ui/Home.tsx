@@ -17,25 +17,30 @@ export function Home() {
 
   return (
     <div className="screen">
-      <h1>Duel</h1>
-      <label>
-        Your name
-        <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="Player 1" data-testid="name-input" />
-      </label>
-      <div className="row">
-        {([3, 5] as const).map((n) => (
-          <button key={n} className={bestOf === n ? "btn btn--on" : "btn btn--ghost"} onClick={() => setBestOf(n)}>
-            Best of {n}
+      <h1 className="logo">Duel!</h1>
+      <p className="tagline">Quick minigames against one friend. Send a link, no sign-up.</p>
+      <div className="panel">
+        <label>
+          Your name
+          <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="Player 1" data-testid="name-input" />
+        </label>
+        <div className="row">
+          {([3, 5] as const).map((n) => (
+            <button key={n} className={bestOf === n ? "btn btn--on" : "btn btn--ghost"} onClick={() => setBestOf(n)} aria-pressed={bestOf === n}>
+              Best of {n}
+            </button>
+          ))}
+        </div>
+        <button className="btn" onClick={create} data-testid="create-match">Create match</button>
+      </div>
+      <h3>Warm up solo</h3>
+      <div className="game-strip">
+        {GAMES.map((g) => (
+          <button key={g.id} className="sticker" onClick={() => navigate(`/practice/${g.id}`)}>
+            {g.emoji} {g.name}
           </button>
         ))}
       </div>
-      <button className="btn" onClick={create} data-testid="create-match">Create match</button>
-      <h3>Practice</h3>
-      {GAMES.map((g) => (
-        <button key={g.id} className="btn btn--ghost" onClick={() => navigate(`/practice/${g.id}`)}>
-          {g.emoji} {g.name}
-        </button>
-      ))}
     </div>
   );
 }

@@ -45,7 +45,8 @@ function Scoreboard({ state, me }: { state: MatchState; me: PlayerId }) {
     const info = state.players[p];
     return (
       <div className={`sb__player sb__player--${p}`}>
-        <div className="sb__name">{info ? info.name : "…"}{p === me && " (you)"}</div>
+        <div className="sb__name">{info ? info.name : "Waiting…"}</div>
+        {p === me && <div className="sb__you">you</div>}
         <div className="sb__pips">
           {Array.from({ length: need }, (_, i) => (
             <span key={i} className={info && i < info.wins ? "pip pip--won" : "pip"} />
@@ -132,7 +133,7 @@ function RoundView({ s, state }: { s: SessionView; state: MatchState }) {
           <div className="intro__emoji">{game.emoji}</div>
           <h2>{game.name}</h2>
           <p>{game.instructions}</p>
-          <p className="muted">{game.better === "lower" ? "Lowest score wins" : "Highest score wins"}</p>
+          <span className="rule-chip">{game.better === "lower" ? "Lowest score wins" : "Highest score wins"}</span>
         </div>
       );
     }
@@ -173,7 +174,8 @@ function RoundResultView({ state, me }: { state: MatchState; me: PlayerId }) {
       <h2>{headline}</h2>
       <div className="result__scores">
         {(["host", "guest"] as const).map((p) => (
-          <div key={p} className={r.winner === p ? "result__card result__card--win" : "result__card"}>
+          <div key={p} className={`result__card result__card--${p} ${r.winner === p ? "result__card--win" : r.winner ? "result__card--lose" : ""}`}>
+            <span className="crown">{r.winner === p ? "👑" : ""}</span>
             <div>{state.players[p]!.name}</div>
             <div className="result__value">{game.formatScore(r.scores[p])}</div>
           </div>
@@ -189,7 +191,7 @@ function MatchOverView({ state, me }: { state: MatchState; me: PlayerId }) {
   const oppRequested = state.rematchRequested.includes(other(me));
   return (
     <div className="screen over" data-testid="match-over">
-      <h1>{won ? "You win!" : `${state.players[state.winner!]!.name} wins!`}</h1>
+      <h1 className="over__title">{won ? "You win!" : `${state.players[state.winner!]!.name} wins!`}</h1>
       {state.endReason === "forfeit" && <p>Opponent left the match.</p>}
       <table className="history">
         <tbody>
@@ -198,8 +200,8 @@ function MatchOverView({ state, me }: { state: MatchState; me: PlayerId }) {
             return (
               <tr key={i}>
                 <td>{g.emoji} {g.name}</td>
-                <td className={r.winner === "host" ? "win" : ""}>{g.formatScore(r.scores.host)}</td>
-                <td className={r.winner === "guest" ? "win" : ""}>{g.formatScore(r.scores.guest)}</td>
+                <td className={r.winner === "host" ? "win-host" : ""}>{g.formatScore(r.scores.host)}</td>
+                <td className={r.winner === "guest" ? "win-guest" : ""}>{g.formatScore(r.scores.guest)}</td>
               </tr>
             );
           })}
