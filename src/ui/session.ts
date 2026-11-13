@@ -13,6 +13,8 @@ import { GAME_RULES } from "../games/registry";
 import { HostController } from "../host/hostController";
 import { GuestClient, type GuestStatus } from "../net/guestClient";
 import { getTransport } from "../net/select";
+import { RoomTakenError, newRoomId } from "../net/transport";
+import { navigate } from "./router";
 import { trackEvent } from "../analytics";
 
 export type Session =
@@ -48,6 +50,12 @@ export async function startHosting(roomId: string, hostName: string, bestOf: Bes
     current = { role: "host", roomId, host };
     pending = null;
   } catch (e) {
+    if (e instanceof RoomTakenError) {
+      // Code clash on the public server: quietly pick another code.
+      pending = null;
+      navigate(`/host/${newRoomId()}`);
+      return;
+    }
     pending = { key, error: e instanceof Error ? e.message : String(e) };
   }
   bump();

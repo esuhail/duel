@@ -62,9 +62,27 @@ export class BaseConnection implements Connection {
   }
 }
 
+/**
+ * 4-letter room codes, short enough to read out loud or type on a phone.
+ * No I or O (they look like 1 and 0). 24^4 = 331,776 codes: plenty for a
+ * hobby project, and a clash is handled by picking another code (see
+ * RoomTakenError). Trade-off: codes are guessable, so a stranger could
+ * stumble into a lobby. Acceptable for casual games between friends.
+ */
+export const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+export const CODE_LENGTH = 4;
+
 export function newRoomId(): string {
-  // No 0/O/1/I/L: the id may be read aloud or typed from a phone screen.
-  const alphabet = "23456789abcdefghjkmnpqrstuvwxyz";
-  const bytes = crypto.getRandomValues(new Uint8Array(8));
-  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
+  const bytes = crypto.getRandomValues(new Uint8Array(CODE_LENGTH));
+  return Array.from(bytes, (b) => CODE_ALPHABET[b % CODE_ALPHABET.length]).join("");
+}
+
+export const normalizeCode = (s: string) =>
+  s.toUpperCase().split("").filter((c) => CODE_ALPHABET.includes(c)).join("").slice(0, CODE_LENGTH);
+
+/** Thrown by Transport.host() when someone else already holds the code. */
+export class RoomTakenError extends Error {
+  constructor() {
+    super("That room code is in use.");
+  }
 }

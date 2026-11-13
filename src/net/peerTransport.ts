@@ -17,7 +17,7 @@
  * logic above this layer.
  */
 import Peer, { type DataConnection, type PeerOptions } from "peerjs";
-import { BaseConnection, type Connection, type HostEndpoint, type Transport } from "./transport";
+import { BaseConnection, type Connection, type HostEndpoint, RoomTakenError, type Transport } from "./transport";
 
 const ID_PREFIX = "duel-esuhail-";
 const HEARTBEAT_MS = 2000;
@@ -81,20 +81,14 @@ function openPeer(id?: string): Promise<Peer> {
     peer.once("error", (err) => {
       clearTimeout(timer);
       peer.destroy();
-      reject(
-        new Error(
-          err.type === "unavailable-id"
-            ? "That room is still open somewhere. Create a new match."
-            : `Network error (${err.type}).`,
-        ),
-      );
+      reject(err.type === "unavailable-id" ? new RoomTakenError() : new Error(`Network error (${err.type}).`));
     });
   });
 }
 
 export const peerTransport: Transport = {
   async host(roomId): Promise<HostEndpoint> {
-    const peer = await openPeer(ID_PREFIX + roomId);
+    const peer = await openPeer(ID_PREFIX + roomId.toLowerCase());
     let listener: (c: Connection) => void = () => {};
     peer.on("connection", (dc) => {
       dc.on("open", () => listener(wrap(dc)));
@@ -120,7 +114,7 @@ export const peerTransport: Transport = {
       peer.on("error", (err) => {
         if (err.type === "peer-unavailable") fail("Match not found. The host may have closed it.");
       });
-      const dc = peer.connect(ID_PREFIX + roomId, { reliable: true, serialization: "json" });
+      const dc = peer.connect(ID_PREFIX + roomId.toLowerCase(), { reliable: true, serialization: "json" });
       dc.on("open", () => {
         clearTimeout(timer);
         resolve(wrap(dc, () => peer.destroy()));
