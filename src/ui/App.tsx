@@ -6,8 +6,7 @@ import { Practice } from "./Practice";
 import { Field } from "./arena";
 import { useHashRoute } from "./router";
 import { useSeamShift } from "./seam";
-import "./theme";
-import { ThemePicker } from "./ThemePicker";
+import "./themes/arcade.css";
 import "./styles.css";
 
 export function App() {
@@ -15,7 +14,6 @@ export function App() {
     <>
       <Field shift={useSeamShift()} />
       <Screen />
-      <ThemePicker />
     </>
   );
 }
