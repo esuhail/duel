@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`mulberry32 > known values never change (guards against accidental edits) 1`] = `
+[
+  "0.97972827",
+  "0.30675226",
+  "0.48420542",
+]
+`;
