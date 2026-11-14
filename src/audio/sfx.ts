@@ -85,10 +85,10 @@ const SOUNDS = {
   count: () => note(A4, 0, 0.12, "square", 0.1),
   go: () => note(880, 0, 0.22, "square", 0.12),
   /** A right answer; `size` 1..4 makes bigger answers sound bigger. */
-  correct: (size = 1) => arp([C5, E5, G5, C6].slice(0, Math.max(2, Math.min(4, size + 1))), 0.045, 0.09, "triangle", 0.18),
+  correct: (size: number = 1) => arp([C5, E5, G5, C6].slice(0, Math.max(2, Math.min(4, size + 1))), 0.045, 0.09, "triangle", 0.18),
   wrong: () => note(196, 0, 0.12, "triangle", 0.16, 147),
   pop: () => note(720, 0, 0.06, "sine", 0.22, 1300),
-  pad: (color = "red") => note(PAD_TONES[color] ?? 440, 0, 0.28, "triangle", 0.22),
+  pad: (color: string = "red") => note(PAD_TONES[color] ?? 440, 0, 0.28, "triangle", 0.22),
   tap: () => note(300, 0, 0.05, "sine", 0.2, 600),
   /** Last five seconds of the clock. */
   tick: () => note(1200, 0, 0.03, "sine", 0.06),
@@ -98,7 +98,7 @@ const SOUNDS = {
   tie: () => arp([A4, A4], 0.12, 0.08, "triangle", 0.15),
   ko: () => { arp([C5, E5, G5, C6, E6], 0.09, 0.16); note(C6, 0.5, 0.5, "square", 0.1); },
   koLose: () => arp([G4, 370, 349, 330], 0.16, 0.24, "triangle", 0.18),
-} satisfies Record<string, (arg?: never) => void>;
+};
 
 export type SoundName = keyof typeof SOUNDS;
 
