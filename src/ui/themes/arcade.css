@@ -43,7 +43,7 @@
 /* ================= type: louder, glowing ================= */
 
 [data-theme="arcade"] .hud__name, [data-theme="arcade"] .rail__name, [data-theme="arcade"] .over__title,
-[data-theme="arcade"] .intro__round, [data-theme="arcade"] .strip__name, [data-theme="arcade"] .split__name { text-shadow: var(--glow-sm); }
+[data-theme="arcade"] .intro__round, [data-theme="arcade"] .split__name { text-shadow: var(--glow-sm); }
 [data-theme="arcade"] .rail__figure, [data-theme="arcade"] .clock__secs, [data-theme="arcade"] .split__score { color: var(--coin); text-shadow: var(--glow); }
 [data-theme="arcade"] .hud__name { font-size: 16px; }
 [data-theme="arcade"] .lead, [data-theme="arcade"] .intro__text { font-size: 22px; }
@@ -186,17 +186,37 @@
 [data-theme="arcade"] .meter { background: repeating-linear-gradient(to top, transparent 0 calc(10% - 3px), var(--bg) calc(10% - 3px) 10%), var(--panel); }
 [data-theme="arcade"] .rail--p1 .meter__fill { box-shadow: 0 0 16px var(--p1); }
 [data-theme="arcade"] .rail--p2 .meter__fill { box-shadow: 0 0 16px var(--p2); }
-[data-theme="arcade"] .strip { background: var(--panel); border-bottom: 3px solid var(--rim); }
-[data-theme="arcade"] .strip__name { font-size: 12px; }
 
 /* ================= game screen chrome ================= */
 
 /* Time = a segmented energy bar that drains from full to empty. */
-[data-theme="arcade"] .timebar { position: relative; height: 22px; border: 3px solid var(--rim); background: var(--panel); clip-path: var(--notch); }
-[data-theme="arcade"] .timebar__fill { background: linear-gradient(90deg, var(--p2), var(--coin) 45%, var(--p1)); background-size: 100vw 100%; box-shadow: 0 0 14px var(--p1); }
-[data-theme="arcade"] .timebar::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 14px, var(--panel) 14px 18px); }
-[data-theme="arcade"] .clock__secs { font-family: var(--display); font-size: 16px; min-width: 6ch; }
-[data-theme="arcade"] .clock.is-low .timebar__fill { background: var(--p2); box-shadow: 0 0 14px var(--p2); }
+[data-theme="arcade"] .clock__bar { position: relative; height: 22px; border: 3px solid var(--rim); background: var(--panel); clip-path: var(--notch); }
+[data-theme="arcade"] .clock__bar--l i { background: linear-gradient(90deg, var(--p1), var(--coin)); box-shadow: 0 0 14px var(--p1); }
+[data-theme="arcade"] .clock__bar--r i { background: linear-gradient(90deg, var(--coin), var(--p2)); box-shadow: 0 0 14px var(--p2); }
+[data-theme="arcade"] .clock__bar::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 14px, var(--panel) 14px 18px); }
+[data-theme="arcade"] .clock__secs {
+  font-family: var(--display);
+  font-size: clamp(26px, 8vw, 40px);
+  padding: 10px 14px;
+  background: #06020f;
+  border: 3px solid var(--rim);
+  clip-path: var(--notch);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9);
+  min-width: 5.2ch;
+}
+[data-theme="arcade"] .clock.is-low .clock__bar i { background: var(--p2); box-shadow: 0 0 14px var(--p2); }
+[data-theme="arcade"] .clock.is-low .clock__secs { border-color: var(--p2); }
+
+/* Versus lanes: two small segmented energy bars. */
+[data-theme="arcade"] .versus { padding: 8px 10px; background: color-mix(in srgb, var(--panel) 85%, transparent); border: 3px solid var(--rim); clip-path: var(--notch); }
+[data-theme="arcade"] .lane { font-size: 20px; font-weight: 400; }
+[data-theme="arcade"] .lane__name { font-family: var(--display); font-size: 11px; text-shadow: var(--glow-sm); }
+[data-theme="arcade"] .lane__track { position: relative; height: 14px; border: 2px solid var(--rim); background: #06020f; }
+[data-theme="arcade"] .lane__track::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 10px, #06020f 10px 12px); }
+[data-theme="arcade"] .lane--p1 .lane__track i { box-shadow: 0 0 10px var(--p1); }
+[data-theme="arcade"] .lane--p2 .lane__track i { box-shadow: 0 0 10px var(--p2); }
+[data-theme="arcade"] .lane__value { color: var(--coin); text-shadow: var(--glow-sm); }
+[data-theme="arcade"] .lane__pop { font-family: var(--display); font-size: 14px; text-shadow: var(--glow); }
 
 /* LED readout panels. */
 [data-theme="arcade"] .math__problem,
@@ -214,7 +234,7 @@
 }
 [data-theme="arcade"] .math__solved { font-size: 16px; padding: 10px 14px; }
 [data-theme="arcade"] .math__input { color: var(--p1); }
-[data-theme="arcade"] .math__problem { font-size: clamp(26px, 7.5vw, 56px); padding: 30px 12px; }
+[data-theme="arcade"] .math__problem { font-size: clamp(26px, 9cqw, 64px); padding: clamp(18px, 4cqh, 40px) 12px; }
 [data-theme="arcade"] .math__problem.is-right { animation: led-right 0.3s ease-out; }
 @keyframes led-right { 0% { color: var(--p1); text-shadow: 0 0 30px var(--p1); border-color: var(--p1); } }
 
@@ -229,7 +249,7 @@
   overflow: hidden;
 }
 [data-theme="arcade"] .reaction__lamp {
-  width: min(62vw, 46vh, 360px);
+  width: min(70cqw, 56cqh, 460px);
   aspect-ratio: 1;
   border-radius: 50%;
   border: 10px solid #1c1442;
@@ -303,7 +323,13 @@
 }
 @keyframes burst { from { transform: translate(-50%, -50%) scale(0.4); opacity: 1; } to { transform: translate(-50%, -50%) scale(2); opacity: 0; } }
 
-/* ---- Unscramble: glowing slots over plastic letter keys ---- */
+/* ---- Anagrams: glowing slots over plastic letter keys ---- */
+[data-theme="arcade"] .anagrams__points { font-family: var(--display); font-size: clamp(28px, 8vw, 48px); color: var(--coin); text-shadow: var(--glow); }
+[data-theme="arcade"] .anagrams__label { font-size: 22px; }
+[data-theme="arcade"] .anagrams__flash { font-family: var(--display); font-size: 13px; padding: 6px 10px; clip-path: var(--notch); }
+[data-theme="arcade"] .anagrams__found li { font-family: var(--display); font-size: 11px; padding: 6px 8px; border-color: var(--rim); background: var(--panel); }
+[data-theme="arcade"] .anagrams__found li.len-5, [data-theme="arcade"] .anagrams__found li.len-6 { border-color: var(--coin); color: var(--coin); text-shadow: var(--glow-sm); }
+[data-theme="arcade"] .key--go { color: var(--on); background: var(--coin); border-color: var(--coin); text-shadow: none; }
 [data-theme="arcade"] .slot {
   font-family: var(--display);
   font-size: 26px;
@@ -314,14 +340,15 @@
   border-radius: 8px;
   box-shadow: 0 0 12px color-mix(in srgb, var(--p1) 45%, transparent), inset 0 0 14px rgba(0, 0, 0, 0.9);
 }
-[data-theme="arcade"] .tile { font-size: 26px; color: var(--coin); text-shadow: var(--glow-sm); }
+[data-theme="arcade"] .tile { color: var(--coin); text-shadow: var(--glow-sm); }
+[data-theme="arcade"] .anagrams .slot, [data-theme="arcade"] .anagrams .tile { font-size: clamp(20px, 6.4vw, 40px); }
 
 /* ---- Memory: a Simon-style cabinet of four domed buttons ---- */
 [data-theme="arcade"] .memory { align-items: center; }
 [data-theme="arcade"] .memory__status { font-size: 14px; padding: 10px 16px; align-self: center; }
 [data-theme="arcade"] .memory__pads {
   position: relative;
-  width: min(100%, 62vh);
+  width: min(96cqw, 100cqh - 250px);
   aspect-ratio: 1;
   min-height: 0;
   flex: none;
@@ -402,10 +429,11 @@
 @media (min-width: 1024px) {
   [data-theme="arcade"] .hud__name { font-size: 22px; }
   [data-theme="arcade"] .hud__meta { font-size: 12px; }
-  [data-theme="arcade"] .math__problem { font-size: clamp(40px, 4.4vw, 72px); }
-  [data-theme="arcade"] .numpad__key { font-size: 28px; }
-  [data-theme="arcade"] .slot, [data-theme="arcade"] .tile { font-size: 40px; }
+  [data-theme="arcade"] .math__problem { font-size: clamp(24px, min(4.6cqw, 9cqh), 80px); white-space: nowrap; }
   [data-theme="arcade"] .reaction__label { font-size: 34px; }
   [data-theme="arcade"] .reaction--go .reaction__label { font-size: 96px; }
-  [data-theme="arcade"] .memory__pads { width: min(100%, 64vh); }
+  [data-theme="arcade"] .memory__pads { width: min(96cqw, 100cqh - 290px); }
 }
+
+/* Numpad digits scale with the key, so tall phones and tablets get big numbers. */
+[data-theme="arcade"] .numpad__key { font-size: clamp(20px, 6cqw, 40px); }
