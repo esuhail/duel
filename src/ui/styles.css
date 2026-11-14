@@ -752,3 +752,5 @@ kbd.p2 { background: var(--p2); }
   .lobby .code__cell { width: 46px; height: 56px; font-size: 30px; }
   .panel { padding: 14px; gap: 10px; }
 }
+
+:root[data-scanlines="off"] .field__scan { display: none; }
