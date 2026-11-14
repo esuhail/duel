@@ -6,7 +6,7 @@ A 1v1 minigame showdown in the browser. One player hits **Quick duel** and share
 
 **Same keyboard mode:** two players on one device. A Reaction duel where both watch the same light; P1 hits `A`, P2 hits `L` (or each taps their half of a phone screen). It runs the same match reducer with no networking at all.
 
-**Games:** ⚡ Reaction · 🧮 Quick Math · 🎯 Target Tap · 🔤 Unscramble · 🧠 Memory Sequence
+**Games:** Reaction, Quick Math, Target Tap, Anagrams, Memory Sequence. Each has a personal best saved on your device and a world top 10.
 
 ## Run it
 
@@ -63,6 +63,20 @@ flowchart LR
 
 **Disconnects.** A heartbeat in the PeerJS transport detects a vanished peer within ~8 s (WebRTC alone can take much longer). The guest retries the same room every 2 s; the host waits 30 s before the guest forfeits. A guest who rejoins mid-round gets a fresh replay of that round, because their half-played game is gone. A refresh rejoins too: the guest's identity token lives in `sessionStorage`.
 
+## Leaderboard setup (optional, free)
+
+Personal bests always work. The world top 10 needs a free [Supabase](https://supabase.com) project:
+
+1. Create a project, open **SQL Editor**, paste `supabase/schema.sql`, and run it.
+2. In **Project Settings > API**, copy the project URL and the `anon` public key.
+3. In this repo: **Settings > Secrets and variables > Actions > Variables**, add `SUPABASE_URL` and `SUPABASE_ANON_KEY`, then re-run the deploy.
+
+How it's protected: the table is read-only to the public; the only way to write is the `submit_score` function, which rejects impossible scores per game (e.g. a reaction average under 100 ms) and rate-limits by name. Only new personal bests are submitted. Free projects pause after a week with no traffic; opening the dashboard wakes them.
+
+## Sound
+
+All sound effects are synthesised in the browser with the Web Audio API (`src/audio/sfx.ts`): no audio files. They're short and quiet by design, and the Reaction "go" moment is deliberately silent, since we react faster to sound than to light and that would favour the player with audio on.
+
 ## Trade-offs (read before relying on this)
 
 - **The host can cheat.** It runs the rules and could fake results with dev tools. The guest could also send a fake score. Fine between friends; a ranked mode would need the host logic on a server (the `HostController` only depends on `Connection`, so it can move to Node with a WebSocket transport).
@@ -71,6 +85,7 @@ flowchart LR
 - **If the host refreshes, the match is lost.** Host state lives only in memory.
 - **4-letter room codes are guessable.** 24⁴ ≈ 330k codes keeps clashes rare (a clash just picks another code), but a stranger could land in an open lobby. A longer code or a join confirmation would fix it.
 - **Same-keyboard mode only has Reaction.** It's the only game two people can share one keyboard or screen for fairly; the others need a full keypad or screen each.
+- **Leaderboard scores are self-reported.** The database rejects impossible scores, but a careful cheater could post a plausible fake. Real protection would mean replaying the game's inputs on a server.
 - **Seeded puzzles are predictable** to anyone who reads the seed off the wire. Again: between friends, fine.
 - **Memory Sequence ties are common** (both reach length 7). Ties replay with a new seed, which works but can drag.
 
