@@ -12,6 +12,7 @@ import { useEffect, useReducer, useState } from "react";
 import { now } from "../core/clock";
 import { type BestOf, type MatchState, createMatch, matchReducer, nextRoundStart } from "../core/match";
 import { randomSeed } from "../core/rng";
+import { sfx } from "../audio/sfx";
 import { reactionGame } from "../games/reaction";
 import { DUEL_KEYS, ReactionDuel } from "../games/reaction/Duel";
 import { TIMING } from "../host/hostController";
@@ -113,6 +114,7 @@ function LocalArena({ p1, p2, bestOf }: { p1: string; p2: string; bestOf: BestOf
           />
         )}
         {state.phase === "roundResult" && last && <RoundSplit state={state} result={last} me={null} />}
+        {state.phase === "matchOver" && <KoSound />}
         {state.phase === "matchOver" && (
           <div className="over" data-testid="match-over">
             <Stamp>K.O.</Stamp>
@@ -126,4 +128,12 @@ function LocalArena({ p1, p2, bestOf }: { p1: string; p2: string; bestOf: BestOf
       </div>
     </div>
   );
+}
+
+function KoSound() {
+  useEffect(() => {
+    const id = setTimeout(() => sfx("ko"), 300);
+    return () => clearTimeout(id);
+  }, []);
+  return null;
 }

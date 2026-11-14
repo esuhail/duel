@@ -1,4 +1,5 @@
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useEffect, useMemo } from "react";
+import { sfx } from "../audio/sfx";
 import type { MiniGame, Progress } from "../games/types";
 import { useCountdown } from "../games/hooks";
 
@@ -24,6 +25,11 @@ export function GamePlayer({
   const left = useCountdown(game.durationMs);
   const Component = game.Component;
   const f = left / game.durationMs;
+  const secs = Math.ceil(left / 1000);
+  useEffect(() => sfx("go"), []);
+  useEffect(() => {
+    if (secs <= 5 && secs > 0) sfx("tick");
+  }, [secs]);
   return (
     <div className="game-player">
       <div className={left < 5000 ? "clock is-low" : "clock"} role="timer" aria-label={`${Math.ceil(left / 1000)} seconds left`}>

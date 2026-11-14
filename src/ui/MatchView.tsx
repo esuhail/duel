@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { now } from "../core/clock";
 import { type MatchState, other } from "../core/match";
+import { sfx } from "../audio/sfx";
 import { getGame } from "../games/registry";
 import { TIMING } from "../host/hostController";
 import { CountdownNumber, Hud, Intro, MatchTable, Rail, RoundSplit, Stamp } from "./arena";
 import { VersusBar } from "./VersusBar";
 import { GamePlayer } from "./GamePlayer";
 import { useNow } from "./hooks";
+import { saveResult } from "./results";
 import { useSetSeam } from "./seam";
 import { navigate } from "./router";
 import { type SessionView, getSession, leave } from "./session";
@@ -57,6 +59,10 @@ function Lobby({ s, state }: { s: SessionView; state: MatchState }) {
     void QRCode.toDataURL(link, { margin: 1, width: 240, color: { dark: "#000000", light: "#ffffff" } }).then(setQr);
   }, [link]);
   const guest = state.players.guest;
+  const guestHere = Boolean(guest?.connected);
+  useEffect(() => {
+    if (guestHere && s.role === "host") sfx("join");
+  }, [guestHere, s.role]);
 
   if (s.role === "guest") {
     return (
@@ -95,7 +101,7 @@ function Lobby({ s, state }: { s: SessionView; state: MatchState }) {
         ))}
       </div>
       <p className={guest ? "lobby__status is-joined" : "lobby__status"} data-testid="lobby-status">{guest ? `${guest.name} joined!` : "Waiting for player 2…"}</p>
-      <button className={guest?.connected ? "trigger is-ready" : "trigger"} disabled={!guest?.connected} onClick={() => hostCtl()?.start()} data-testid="start-match">
+      <button className={guest?.connected ? "trigger is-ready" : "trigger"} disabled={!guest?.connected} onClick={() => { sfx("select"); hostCtl()?.start(); }} data-testid="start-match">
         Fight
       </button>
       <p className="muted">{guest?.connected ? "Rounds are picked at random, no repeats until every game is played." : "Fight unlocks when player 2 joins."}</p>
@@ -138,6 +144,7 @@ function RoundView({ s, state }: { s: SessionView; state: MatchState }) {
       game={game}
       seed={cur.seed}
       onFinish={(value) => {
+        saveResult(cur.gameId, value);
         setMyScore({ key, value });
         s.submitScore(cur.round, cur.attempt, value);
       }}
@@ -149,6 +156,10 @@ function RoundView({ s, state }: { s: SessionView; state: MatchState }) {
 
 function MatchOver({ state, me }: { state: MatchState; me: "host" | "guest" }) {
   const winner = state.winner!;
+  useEffect(() => {
+    const id = setTimeout(() => sfx(winner === me ? "ko" : "koLose"), 300);
+    return () => clearTimeout(id);
+  }, [winner, me]);
   const iRequested = state.rematchRequested.includes(me);
   const oppRequested = state.rematchRequested.includes(other(me));
   return (

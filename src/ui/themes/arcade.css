@@ -437,3 +437,56 @@
 
 /* Numpad digits scale with the key, so tall phones and tablets get big numbers. */
 [data-theme="arcade"] .numpad__key { font-size: clamp(20px, 6cqw, 40px); }
+
+/* ================= menus ================= */
+
+[data-theme="arcade"] .menu__item {
+  background: color-mix(in srgb, var(--panel) 90%, transparent);
+  border: 3px solid var(--rim);
+  clip-path: var(--notch);
+  transition: transform 0.08s;
+}
+[data-theme="arcade"] .menu__label { font-size: clamp(14px, 3.6vw, 20px); color: var(--fg); }
+[data-theme="arcade"] .menu__hint { font-size: 19px; color: color-mix(in srgb, var(--fg) 60%, transparent); }
+[data-theme="arcade"] .menu__item::before { color: var(--coin); text-shadow: var(--glow-sm); font-size: 16px; }
+[data-theme="arcade"] .menu__item:focus, [data-theme="arcade"] .menu__item:hover {
+  background: color-mix(in srgb, var(--p1) 16%, var(--panel));
+  border-color: var(--p1);
+  color: var(--fg);
+  transform: translateX(6px);
+}
+[data-theme="arcade"] .menu__item:focus .menu__label, [data-theme="arcade"] .menu__item:hover .menu__label { color: var(--p1); text-shadow: var(--glow-sm); }
+[data-theme="arcade"] .menu__item--primary { background: radial-gradient(ellipse at 50% 20%, #fff6b0, var(--coin) 55%, #c79a00); border: 0; box-shadow: inset 0 -6px 0 #a37e00; }
+[data-theme="arcade"] .menu__item--primary .menu__label { color: var(--on); font-size: clamp(18px, 4.6vw, 26px); }
+[data-theme="arcade"] .menu__item--primary .menu__hint { color: color-mix(in srgb, var(--on) 75%, transparent); }
+[data-theme="arcade"] .menu__item--primary::before { color: var(--on); text-shadow: none; }
+[data-theme="arcade"] .menu__item--primary:focus, [data-theme="arcade"] .menu__item--primary:hover {
+  background: radial-gradient(ellipse at 50% 20%, #fffbe0, #ffd84a 55%, #d9a800);
+}
+[data-theme="arcade"] .menu__item--primary:focus .menu__label, [data-theme="arcade"] .menu__item--primary:hover .menu__label { color: var(--on); text-shadow: none; }
+
+[data-theme="arcade"] .sub__title { color: var(--coin); text-shadow: 0 0 14px var(--coin), 4px 4px 0 var(--p2); font-size: clamp(16px, 4.6vw, 32px); }
+[data-theme="arcade"] .sub__back { font-size: 11px; }
+[data-theme="arcade"] .tab { font-family: var(--display); font-size: 11px; padding: 10px 12px; border: 3px solid var(--rim); background: var(--panel); clip-path: var(--notch); }
+[data-theme="arcade"] .tab.is-on { background: var(--p1); color: var(--on); border-color: var(--p1); }
+[data-theme="arcade"] .board, [data-theme="arcade"] .setting { background: color-mix(in srgb, var(--panel) 92%, transparent); border: 3px solid var(--rim); clip-path: var(--notch); }
+[data-theme="arcade"] .board__title, [data-theme="arcade"] .setting__label { font-size: 13px; color: var(--p1); text-shadow: var(--glow-sm); }
+[data-theme="arcade"] .board__big, [data-theme="arcade"] .new-best { color: var(--coin); text-shadow: var(--glow); }
+[data-theme="arcade"] .ranks li { font-size: 24px; border-color: var(--rim); }
+[data-theme="arcade"] .ranks li:nth-child(1) { color: var(--coin); text-shadow: var(--glow-sm); font-size: 28px; }
+[data-theme="arcade"] .ranks li:nth-child(2), [data-theme="arcade"] .ranks li:nth-child(3) { color: var(--p1); }
+[data-theme="arcade"] .ranks__pos { font-family: var(--display); font-size: 14px; align-self: center; }
+[data-theme="arcade"] .setting__input { font-family: var(--display); font-size: 14px; color: var(--p1); background: #06020f; border: 3px solid var(--rim); clip-path: var(--notch); }
+[data-theme="arcade"] .toggle { font-size: 12px; border: 3px solid var(--rim); clip-path: var(--notch); background: var(--panel); }
+[data-theme="arcade"] .toggle.is-on { background: var(--p1); border-color: var(--p1); color: var(--on); box-shadow: 0 0 14px var(--p1); }
+[data-theme="arcade"] .key--danger { border-color: var(--p2); color: var(--p2); }
+[data-theme="arcade"] input[type="range"] { accent-color: var(--coin); }
+[data-theme="arcade"] .practice .intro__text { font-size: 24px; }
+@media (min-width: 1024px) {
+  [data-theme="arcade"] .home .player-name input { width: 100%; }
+  [data-theme="arcade"] .sub__title { font-size: 40px; }
+  [data-theme="arcade"] .sub .menu__label { font-size: 22px; }
+  [data-theme="arcade"] .board__title, [data-theme="arcade"] .setting__label { font-size: 15px; }
+  [data-theme="arcade"] .board__big { font-size: 36px; }
+  [data-theme="arcade"] .setting__hint, [data-theme="arcade"] .board .muted { font-size: 21px; }
+}

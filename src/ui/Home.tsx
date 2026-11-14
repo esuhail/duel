@@ -1,46 +1,33 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { GAMES } from "../games/registry";
-import { CODE_ALPHABET, CODE_LENGTH, newRoomId, normalizeCode } from "../net/transport";
+import { newRoomId } from "../net/transport";
 import { loadName, saveName } from "./hooks";
+import { Menu } from "./Menu";
 import { navigate } from "./router";
 
-/**
- * The lobby: a title, a 4-letter code you can punch in, and one button.
- * Typing on a physical keyboard works too; the on-screen keys are for phones
- * (and avoid the phone keyboard covering half the screen).
- */
+/** Main menu. Your name sits above it because every mode uses it. */
 export function Home() {
   const [name, setName] = useState(loadName);
-  const [code, setCode] = useState("");
+  const keep = () => saveName(name || "P1");
 
-  const press = (k: string) => {
-    if (k === "⌫") return setCode((c) => c.slice(0, -1));
-    setCode((c) => normalizeCode(c + k));
-  };
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey) return;
-      if (e.key === "Backspace") press("⌫");
-      else if (e.key.length === 1 && CODE_ALPHABET.includes(e.key.toUpperCase())) press(e.key.toUpperCase());
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  // A full code joins immediately: no extra button to find.
-  useEffect(() => {
-    if (code.length === CODE_LENGTH) {
-      saveName(name || "P2");
-      navigate(`/join/${code}`);
-    }
-  }, [code, name]);
-
-  const quickDuel = () => {
-    saveName(name || "P1");
-    sessionStorage.setItem("duel:bestOf", "3");
-    navigate(`/host/${newRoomId()}`);
-  };
+  const items = [
+    {
+      label: "Quick duel",
+      hint: "Open a room and invite a friend",
+      primary: true,
+      testId: "create-match",
+      onSelect: () => {
+        keep();
+        sessionStorage.setItem("duel:bestOf", "3");
+        navigate(`/host/${newRoomId()}`);
+      },
+    },
+    { label: "Join with code", hint: "Got 4 letters from a friend?", testId: "menu-join", onSelect: () => { keep(); navigate("/join"); } },
+    { label: "Same keyboard", hint: "Two players, one device", testId: "menu-local", onSelect: () => navigate("/local") },
+    { label: "Practice", hint: "Solo runs, beat your best", testId: "menu-practice", onSelect: () => { keep(); navigate("/practice"); } },
+    { label: "Leaderboards", hint: "World records and your bests", testId: "menu-records", onSelect: () => navigate("/records") },
+    { label: "Settings", hint: "Sound and screen", testId: "menu-settings", onSelect: () => navigate("/settings") },
+  ];
 
   return (
     <div className="home">
@@ -48,45 +35,28 @@ export function Home() {
         <h1 className="title-stamp" aria-label="Duel">DUEL</h1>
         <ol className="how">
           <li><span><b>Quick duel</b> opens a room with a 4-letter code.</span></li>
-          <li><span>Your friend punches in the code or scans the QR.</span></li>
+          <li><span>Your friend picks Join with code, or scans the QR.</span></li>
           <li><span>Best of 3 rounds of 20 to 60 second minigames. Same puzzle for both of you.</span></li>
         </ol>
         <p className="how__games">{GAMES.length} games: {GAMES.map((g) => g.name).join(", ")}.</p>
       </div>
       <div className="home__play">
-
-      <section className="join" aria-label="Join a room">
         <label className="player-name">
           <span className="lead">Player name</span>
-          <input value={name} maxLength={12} onChange={(e) => setName(e.target.value)} placeholder="P1" data-testid="name-input" autoComplete="nickname" spellCheck={false} />
+          <input
+            value={name}
+            maxLength={12}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={keep}
+            placeholder="P1"
+            data-testid="name-input"
+            autoComplete="nickname"
+            spellCheck={false}
+          />
         </label>
-        <p className="lead">Got a code? Punch it in.</p>
-        <div className="code code--input" data-testid="code-input">
-          {Array.from({ length: CODE_LENGTH }, (_, i) => (
-            <span key={`${i}${code[i] ?? ""}`} className={i === code.length ? "code__cell is-next" : code[i] ? "code__cell is-filled" : "code__cell"}>{code[i] ?? ""}</span>
-          ))}
-        </div>
-        <div className="keypad">
-          {[...CODE_ALPHABET, "⌫"].map((k) => (
-            <button key={k} className="keycap" onPointerDown={(e) => { e.preventDefault(); press(k); }} aria-label={k === "⌫" ? "Delete" : k}>
-              {k}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <button className="trigger trigger--huge" onClick={quickDuel} data-testid="create-match">Quick duel</button>
-
+        <Menu label="Main menu" items={items} />
+        <p className="menu__keys kbd-hint">Arrow keys to move, Enter to pick</p>
       </div>
-      <footer className="home__more">
-        <a href="#/local" className="textlink">Same keyboard</a>
-        <span className="home__practice">
-          Practice:{" "}
-          {GAMES.map((g) => (
-            <a key={g.id} href={`#/practice/${g.id}`} className="textlink">{g.name}</a>
-          ))}
-        </span>
-      </footer>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { type ReactNode, useEffect, useRef } from "react";
 import type { Progress } from "../games/types";
 import { type MatchState, type PlayerId, type RoundResult, winsNeeded } from "../core/match";
 import { getGame } from "../games/registry";
+import { sfx } from "../audio/sfx";
 
 export const slot = (p: PlayerId) => (p === "host" ? "p1" : "p2");
 
@@ -172,6 +173,11 @@ export function RoundSplit({ state, result, me }: { state: MatchState; result: R
   const w = result.winner;
   // The stamp sits on the seam, pulled inward a bit so it never leaves the screen.
   const seamAt = w === "host" ? 62 : w === "guest" ? 38 : 50;
+  useEffect(() => {
+    // Delay to land with the stamp.
+    const id = setTimeout(() => sfx(w === null ? "tie" : me === null || w === me ? "roundWin" : "roundLose"), 250);
+    return () => clearTimeout(id);
+  }, [w, me]);
   const margin = w ? game.formatMargin(Math.abs(result.scores.host - result.scores.guest)) : "Dead even";
   return (
     <div className="split shake-hard" data-testid="round-result">
@@ -231,6 +237,7 @@ export function Intro({ gameId, round, attempt, extra }: { gameId: string; round
 
 export function CountdownNumber({ msLeft }: { msLeft: number }) {
   const n = Math.max(1, Math.ceil(msLeft / 1000));
+  useEffect(() => sfx("count"), [n]);
   return (
     <div className="countdown" data-testid="countdown">
       <div className="countdown__num" key={n}>{n}</div>
