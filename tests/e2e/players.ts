@@ -1,5 +1,9 @@
 import type { Locator, Page } from "@playwright/test";
-import { WORDS } from "../../src/games/unscramble/words";
+import { readFileSync } from "node:fs";
+
+const DICT = readFileSync(new URL("../../src/games/anagrams/words.txt", import.meta.url), "utf8").split(" ");
+/** Per page: which letter set we're on and how many of its words we've entered. */
+const anagramState = new WeakMap<Page, { key: string; next: number }>();
 
 /** The element can vanish when the game's timer ends mid-move; that's fine. */
 const tap = (l: Locator) => l.dispatchEvent("pointerdown", undefined, { timeout: 1000 }).catch(() => {});
@@ -37,18 +41,23 @@ export async function playGame(page: Page, weak: boolean) {
     return;
   }
 
-  if (await page.getByTestId("unscramble-tiles").isVisible()) {
-    const letters = (await page.getByTestId("unscramble-tiles").locator(".tile").allInnerTexts()).map((s) => s.trim().toLowerCase());
+  if (await page.getByTestId("anagrams-tiles").isVisible()) {
+    const letters = await page.getByTestId("anagrams-tiles").locator(".tile").evaluateAll((els) => els.map((e) => e.getAttribute("data-letter") ?? ""));
     const key = [...letters].sort().join("");
-    const word = WORDS.find((w) => [...w].sort().join("") === key);
-    if (!word) return;
-    const used = new Set<number>();
-    for (const ch of word) {
-      const i = letters.findIndex((l, j) => l === ch && !used.has(j));
-      used.add(i);
-      await tap(page.getByTestId(`tile-${i}`));
+    const pool = (w: string) => [...w].every((ch, _i, arr) => arr.filter((c) => c === ch).length <= letters.filter((c) => c === ch).length);
+    const answers = DICT.filter((w) => pool(w)).sort((a, b) => b.length - a.length);
+    const st = anagramState.get(page);
+    const state = st && st.key === key ? st : { key, next: 0 };
+    anagramState.set(page, state);
+    const limit = weak ? 5 : 14;
+    if (state.next < Math.min(limit, answers.length)) {
+      // The weak bot starts from the short end, so it scores fewer points.
+      const word = weak ? answers[answers.length - 1 - state.next]! : answers[state.next]!;
+      state.next++;
+      await page.keyboard.type(word);
+      await page.keyboard.press("Enter");
     }
-    await page.waitForTimeout(weak ? 1500 : 300);
+    await page.waitForTimeout(weak ? 900 : 250);
     return;
   }
 

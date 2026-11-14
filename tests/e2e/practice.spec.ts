@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { memoryRecorder, playGame } from "./players";
 
-for (const id of ["reaction", "math", "targets", "unscramble", "memory"]) {
+for (const id of ["reaction", "math", "targets", "anagrams", "memory"]) {
   test(`practice ${id} ends with a score`, async ({ page }) => {
     test.setTimeout(90_000);
     await page.addInitScript(memoryRecorder);
