@@ -26,9 +26,10 @@ test("two players create, join and finish a match, then rematch", async ({ brows
   await expect(host.getByTestId("lobby-status")).toHaveText("Bob joined!");
   await host.getByTestId("start-match").click();
 
-  // Live progress: once both are playing, each phone shows the other's strip.
-  await expect(guest.getByTestId("opponent-strip")).toContainText("Alice", { timeout: 20_000 });
-  await expect(host.getByTestId("opponent-strip")).toContainText("Bob");
+  // Live progress: once both are playing, each screen shows the other's lane updating.
+  await expect(guest.getByTestId("versus-opponent")).toContainText("Alice", { timeout: 20_000 });
+  await expect(host.getByTestId("versus-opponent")).toContainText("Bob");
+  await expect(host.getByTestId("versus-opponent")).toContainText(/\d/, { timeout: 30_000 });
 
   await playUntilOver([host, guest]);
   await expect(host.getByTestId("match-over")).toBeVisible();

@@ -49,7 +49,7 @@ function Reaction({ puzzle, onFinish, onProgress }: GameProps<ReactionPuzzle>) {
 
   useReportProgress(onProgress, {
     fraction: times.length / ATTEMPTS,
-    headline: times.length ? String(averageMs(times)) : "0",
+    headline: times.length ? String(averageMs(times)) : "-",
     unit: "ms avg",
     detail: times.length === ATTEMPTS ? "All tries done" : `Try ${Math.min(times.length + 1, ATTEMPTS)} of ${ATTEMPTS}`,
   });

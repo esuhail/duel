@@ -4,7 +4,8 @@ import { now } from "../core/clock";
 import { type MatchState, other } from "../core/match";
 import { getGame } from "../games/registry";
 import { TIMING } from "../host/hostController";
-import { CountdownNumber, Hud, Intro, MatchTable, OpponentStrip, Rail, RoundSplit, Stamp } from "./arena";
+import { CountdownNumber, Hud, Intro, MatchTable, Rail, RoundSplit, Stamp } from "./arena";
+import { VersusBar } from "./VersusBar";
 import { GamePlayer } from "./GamePlayer";
 import { useNow } from "./hooks";
 import { useSetSeam } from "./seam";
@@ -34,14 +35,6 @@ export function MatchView({ s }: { s: SessionView }) {
         <div className="alert" data-testid="disconnected">{opp.name} dropped. Holding the match for 30 s.</div>
       )}
       {s.status === "reconnecting" && <div className="alert">Connection lost. Reconnecting…</div>}
-      {(state.phase === "countdown" || state.phase === "playing") && opp && (
-        <OpponentStrip
-          name={opp.name}
-          p={other(me)}
-          progress={s.progress[other(me)]}
-          finishedText={state.current?.scores[other(me)] !== undefined ? getGame(state.current.gameId).formatScore(state.current.scores[other(me)]!) : undefined}
-        />
-      )}
       <div className="arena__body">
         <Rail state={state} p="host" me={me} progress={s.progress.host} />
         <main className="stage">
@@ -135,9 +128,7 @@ function RoundView({ s, state }: { s: SessionView; state: MatchState }) {
       <div className="panel">
         <p className="lead">You: <span className="mono">{game.formatScore(myScore.value)}</span></p>
         <p className="waiting">Waiting for {state.players[other(s.role)]?.name}</p>
-        {s.progress[other(s.role)] && (
-          <p className="muted">They're on {s.progress[other(s.role)]!.headline} {s.progress[other(s.role)]!.unit}</p>
-        )}
+        <VersusBar state={state} me={s.role} progress={s.progress} />
       </div>
     );
   }
@@ -151,6 +142,7 @@ function RoundView({ s, state }: { s: SessionView; state: MatchState }) {
         s.submitScore(cur.round, cur.attempt, value);
       }}
       onProgress={(p) => s.reportProgress(cur.round, cur.attempt, p)}
+      versus={<VersusBar state={state} me={s.role} progress={s.progress} />}
     />
   );
 }

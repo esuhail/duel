@@ -302,16 +302,3 @@ export function Rail({ state, p, me, progress }: { state: MatchState; p: PlayerI
     </aside>
   );
 }
-
-/** Mobile: one slim line showing what the opponent is doing right now. */
-export function OpponentStrip({ name, p, progress, finishedText }: { name: string; p: PlayerId; progress?: Progress; finishedText?: string }) {
-  return (
-    <div className={`strip strip--${slot(p)}`} data-testid="opponent-strip">
-      <span className="strip__name">{name}</span>
-      <span className="strip__value" key={finishedText ?? progress?.headline}>
-        {finishedText ? `Finished, ${finishedText}` : progress ? `${progress.headline} ${progress.unit}` : "Starting…"}
-      </span>
-      <span className="strip__bar"><i style={{ width: `${(finishedText ? 1 : progress?.fraction ?? 0) * 100}%` }} /></span>
-    </div>
-  );
-}
