@@ -5,6 +5,8 @@
  * mean the same thing in both modes.
  */
 import { useEffect, useRef, useState } from "react";
+import { sfx } from "../../audio/sfx";
+
 import type { PlayerId } from "../../core/match";
 import { ATTEMPTS, MISS_AFTER_MS, PENALTY_MS, type ReactionPuzzle, averageMs } from "./puzzle";
 
@@ -28,6 +30,7 @@ export function ReactionDuel({ puzzle, onFinish }: { puzzle: ReactionPuzzle; onF
 
   const record = (p: PlayerId, ms: number, label: string) => {
     if (live.current.hit[p]) return;
+    sfx(ms >= PENALTY_MS ? "wrong" : "tap");
     const next = { ...live.current.hit, [p]: { ms, label } };
     live.current.hit = next;
     setHit(next);

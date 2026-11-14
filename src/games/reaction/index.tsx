@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { sfx } from "../../audio/sfx";
+
 import { type GameProps, defineGame } from "../types";
 import { useFinishOnce, useKeys, useReportProgress } from "../hooks";
 import {
@@ -23,6 +25,7 @@ function Reaction({ puzzle, onFinish, onProgress }: GameProps<ReactionPuzzle>) {
   const greenAt = useRef(0);
 
   const record = (ms: number, msg: string) => {
+    sfx(ms >= PENALTY_MS ? "wrong" : "tap");
     const next = [...times, ms];
     setTimes(next);
     setMessage(msg);

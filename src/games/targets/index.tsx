@@ -1,4 +1,6 @@
 import { useRef, useState } from "react";
+import { sfx } from "../../audio/sfx";
+
 import { useFinishOnce, useReportProgress, useTimeUp } from "../hooks";
 import { type GameProps, defineGame } from "../types";
 import { TARGET_COUNT, TARGET_TIME_LIMIT, type Point, createTargetsPuzzle, timeoutScore } from "./puzzle";
@@ -19,6 +21,7 @@ function TargetTap({ puzzle, onFinish, onProgress }: GameProps<Point[]>) {
   const p = puzzle[hit];
   const tap = (e: React.PointerEvent) => {
     e.stopPropagation();
+    sfx("pop");
     const next = hit + 1;
     setHit(next);
     if (next === TARGET_COUNT) finish(Math.round(e.timeStamp - startedAt.current));

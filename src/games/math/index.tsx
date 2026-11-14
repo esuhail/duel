@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { sfx } from "../../audio/sfx";
+
 import { useFinishOnce, useKeys, useReportProgress, useTimeUp } from "../hooks";
 import { type GameProps, defineGame } from "../types";
 import { type MathProblem, createMathPuzzle } from "./puzzle";
@@ -26,10 +28,12 @@ function QuickMath({ puzzle, onFinish, onProgress }: GameProps<MathProblem[]>) {
     if (k === "⌫") return setInput((s) => s.slice(0, -1));
     if (k === "C") return setInput("");
     const next = input + k;
+    if (next.length < String(p.answer).length) sfx("key");
     const target = String(p.answer);
     // Auto-submit once enough digits are typed: no "enter" key to aim for.
     if (next.length < target.length) return setInput(next);
     setLastRight(next === target);
+    sfx(next === target ? "correct" : "wrong", 1);
     if (next === target) {
       setIndex((i) => Math.min(i + 1, puzzle.length - 1));
       if (index + 1 >= puzzle.length) finish(index + 1);

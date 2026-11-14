@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { sfx } from "../../audio/sfx";
+
 import { useFinishOnce, useKeys, useReportProgress, useTimeUp } from "../hooks";
 import { type GameProps, defineGame } from "../types";
 import { type AnagramsPuzzle, POINTS, createAnagramsPuzzle, judge } from "./puzzle";
@@ -30,7 +32,9 @@ function Anagrams({ puzzle, onFinish, onProgress }: GameProps<AnagramsPuzzle>) {
   const say = (text: string, good: boolean) => setFlash({ id: Date.now(), text, good });
 
   const pick = (i: number) => {
-    if (!picked.includes(i)) setPicked([...picked, i]);
+    if (picked.includes(i)) return;
+    sfx("key");
+    setPicked([...picked, i]);
   };
   const submit = () => {
     if (!word) return;
@@ -39,10 +43,17 @@ function Anagrams({ puzzle, onFinish, onProgress }: GameProps<AnagramsPuzzle>) {
       setFound([word, ...found]);
       setPoints(points + v.points);
       say(`${word.toUpperCase()} +${v.points}`, true);
-    } else say(REASONS[v.reason], false);
+      sfx("correct", word.length - 2);
+    } else {
+      say(REASONS[v.reason], false);
+      sfx("wrong");
+    }
     setPicked([]);
   };
-  const shuffle = () => setOrder((o) => [...o].sort(() => Math.random() - 0.5));
+  const shuffle = () => {
+    sfx("move");
+    setOrder((o) => [...o].sort(() => Math.random() - 0.5));
+  };
 
   useKeys((e) => {
     const k = e.key.toLowerCase();

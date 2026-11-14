@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { sfx } from "../../audio/sfx";
+
 import { useFinishOnce, useKeys, useReportProgress, useTimeUp } from "../hooks";
 import { type GameProps, defineGame } from "../types";
 import { COLORS, type Color, MAX_LENGTH, START_LENGTH, createMemoryPuzzle, flashMs } from "./puzzle";
@@ -24,6 +26,7 @@ function MemorySequence({ puzzle, onFinish, onProgress }: GameProps<Color[]>) {
     let id: ReturnType<typeof setTimeout>;
     if (stage.kind === "between") id = setTimeout(() => setStage({ kind: "show", step: 0, lit: true }), 700);
     else if (stage.kind === "show") {
+      if (stage.lit) sfx("pad", puzzle[stage.step]);
       id = setTimeout(() => {
         if (stage.lit) setStage({ ...stage, lit: false });
         else if (stage.step + 1 < length) setStage({ kind: "show", step: stage.step + 1, lit: true });
@@ -46,7 +49,11 @@ function MemorySequence({ puzzle, onFinish, onProgress }: GameProps<Color[]>) {
     if (stage.kind !== "input") return;
     setFlash(c);
     setTimeout(() => setFlash(null), 150);
-    if (c !== puzzle[stage.pos]) return finish(best);
+    if (c !== puzzle[stage.pos]) {
+      sfx("error");
+      return finish(best);
+    }
+    sfx("pad", c);
     if (stage.pos + 1 < length) return setStage({ kind: "input", pos: stage.pos + 1 });
     if (length >= MAX_LENGTH) return finish(length);
     setLength(length + 1);
