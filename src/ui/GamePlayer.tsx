@@ -1,30 +1,38 @@
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import type { MiniGame, Progress } from "../games/types";
 import { useCountdown } from "../games/hooks";
 
-/** Runs one game instance: builds the puzzle from the seed, shows the clock. */
+/**
+ * Runs one game instance: builds the puzzle from the seed, shows the clock
+ * (big, centred, with energy bars draining toward it from both sides) and,
+ * in a match, the live versus bar.
+ */
 export function GamePlayer({
   game,
   seed,
   onFinish,
   onProgress,
+  versus,
 }: {
   game: MiniGame;
   seed: number;
   onFinish: (score: number) => void;
   onProgress?: (p: Progress) => void;
+  versus?: ReactNode;
 }) {
   const puzzle = useMemo(() => game.createPuzzle(seed), [game, seed]);
   const left = useCountdown(game.durationMs);
   const Component = game.Component;
-  const low = left < 5000;
+  const f = left / game.durationMs;
   return (
     <div className="game-player">
-      <div className={low ? "clock is-low" : "clock"}>
-        <div className="timebar" aria-hidden="true"><div className="timebar__fill" style={{ width: `${(left / game.durationMs) * 100}%` }} /></div>
-        <span className="kbd-hint clock__hint">{game.keyHint}</span>
-        <span className="clock__secs" aria-label={`${Math.ceil(left / 1000)} seconds left`}>{(left / 1000).toFixed(1)}s</span>
+      <div className={left < 5000 ? "clock is-low" : "clock"} role="timer" aria-label={`${Math.ceil(left / 1000)} seconds left`}>
+        <div className="clock__bar clock__bar--l" aria-hidden="true"><i style={{ transform: `scaleX(${f})` }} /></div>
+        <span className="clock__secs">{(left / 1000).toFixed(1)}</span>
+        <div className="clock__bar clock__bar--r" aria-hidden="true"><i style={{ transform: `scaleX(${f})` }} /></div>
       </div>
+      <p className="kbd-hint clock__hint">{game.keyHint}</p>
+      {versus}
       <Component puzzle={puzzle} onFinish={onFinish} onProgress={onProgress} />
     </div>
   );
