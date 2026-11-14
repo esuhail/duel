@@ -77,18 +77,6 @@ How it's protected: the table is read-only to the public; the only way to write 
 
 All sound effects are synthesised in the browser with the Web Audio API (`src/audio/sfx.ts`): no audio files. They're short and quiet by design, and the Reaction "go" moment is deliberately silent, since we react faster to sound than to light and that would favour the player with audio on.
 
-## Trade-offs (read before relying on this)
-
-- **The host can cheat.** It runs the rules and could fake results with dev tools. The guest could also send a fake score. Fine between friends; a ranked mode would need the host logic on a server (the `HostController` only depends on `Connection`, so it can move to Node with a WebSocket transport).
-- **Some networks block peer-to-peer.** Strict school/corporate Wi-Fi and some carrier NATs can't connect directly. PeerJS's defaults include a public TURN relay as fallback; for reliability, set your own TURN server via `VITE_TURN_URL`, `VITE_TURN_USER`, `VITE_TURN_PASS`.
-- **Depends on the free PeerJS signaling server** for the initial handshake. If it's down, nobody can create or join matches (games in progress continue).
-- **If the host refreshes, the match is lost.** Host state lives only in memory.
-- **4-letter room codes are guessable.** 24⁴ ≈ 330k codes keeps clashes rare (a clash just picks another code), but a stranger could land in an open lobby. A longer code or a join confirmation would fix it.
-- **Same-keyboard mode only has Reaction.** It's the only game two people can share one keyboard or screen for fairly; the others need a full keypad or screen each.
-- **Leaderboard scores are self-reported.** The database rejects impossible scores, but a careful cheater could post a plausible fake. Real protection would mean replaying the game's inputs on a server.
-- **Seeded puzzles are predictable** to anyone who reads the seed off the wire. Again: between friends, fine.
-- **Memory Sequence ties are common** (both reach length 7). Ties replay with a new seed, which works but can drag.
-
 ## Testing
 
 - **Unit** (`*.test.ts`): RNG determinism, every game's puzzle is reproducible from its seed, reducer edge cases (ties, best-of-5 math, late/duplicate/garbage scores, forfeits, rematch, game order with no repeats).
